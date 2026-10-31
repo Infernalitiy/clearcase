@@ -39,7 +39,7 @@ const reader = {
 
 // ---------------- Settings ----------------
 function loadSettings() {
-  const defaults = { needs: [], textSize: "normal", contrast: false, dyslexia: false, autoRead: false, caregiver: false, rate: "1", saved: false };
+  const defaults = { needs: [], textSize: "normal", contrast: false, dyslexia: false, autoRead: false, caregiver: false, rate: "1", voice: "default", saved: false };
   try {
     return Object.assign(defaults, JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}"));
   } catch (e) {
@@ -78,6 +78,8 @@ function fillSettingsForm() {
   f.autoRead.checked = s.autoRead;
   f.caregiver.checked = s.caregiver;
   f.rate.value = s.rate;
+  f.voice.value = s.voice;
+  updateAudioSettings();
 }
 
 $("#settings-form").addEventListener("change", (e) => {
@@ -88,6 +90,20 @@ $("#settings-form").addEventListener("change", (e) => {
     f.autoRead.checked = true;
     $$("#settings-form input[name=textSize]").forEach((r) => { r.checked = r.value === "large"; });
   }
+});
+
+// Audio settings only make sense when audio is on (same rule as audioOn()).
+function updateAudioSettings() {
+  const checked = (v) => $(`#settings-form input[name=needs][value=${v}]`).checked;
+  $("#audio-settings").hidden = checked("deaf_hoh") && !checked("blind_low_vision");
+}
+$("#settings-form").addEventListener("change", updateAudioSettings);
+
+$("#preview-voice").addEventListener("click", () => {
+  if (!("speechSynthesis" in window)) return announce("Read aloud isn't available in this browser.");
+  const f = $("#settings-form");
+  speechSynthesis.cancel();
+  speechSynthesis.speak(makeUtterance("Hi, I'm here to help you read your papers.", f.voice.value, f.rate.value));
 });
 
 $("#settings-form").addEventListener("submit", (e) => {
@@ -101,6 +117,7 @@ $("#settings-form").addEventListener("submit", (e) => {
     autoRead: f.autoRead.checked,
     caregiver: f.caregiver.checked,
     rate: f.rate.value,
+    voice: f.voice.value,
     saved: true,
   };
   saveSettings();
@@ -431,6 +448,40 @@ function userMoveTo(i) {
 $("#prev-btn").addEventListener("click", () => userMoveTo(state.page - 1));
 $("#next-btn").addEventListener("click", () => userMoveTo(state.page + 1));
 
+// ---------------- Voice styles ----------------
+// Styles are built from the device's own voices plus pitch and rate. Names are tried in order.
+const VOICE_STYLES = {
+  default: { names: [], pitch: 1, rate: 1 },
+  warm: { names: ["Microsoft Aria Online", "Microsoft Jenny", "Google US English", "Samantha", "Microsoft Zira", "Karen", "Female"], pitch: 1.1, rate: 0.9 },
+  calm: { names: ["Microsoft Guy", "Google UK English Male", "Daniel", "Microsoft David", "Alex", "Male"], pitch: 0.9, rate: 0.9 },
+  bright: { names: ["Microsoft Jenny", "Microsoft Aria", "Google US English", "Samantha", "Microsoft Zira", "Karen", "Female"], pitch: 1.25, rate: 1.05 },
+  clear: { names: ["Microsoft Aria", "Google US English", "Samantha", "Microsoft Zira", "Microsoft David"], pitch: 1, rate: 0.75 },
+};
+let voices = [];
+function loadVoices() { voices = "speechSynthesis" in window ? speechSynthesis.getVoices() || [] : []; }
+if ("speechSynthesis" in window) { loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
+
+function pickVoice(styleKey) {
+  const style = VOICE_STYLES[styleKey] || VOICE_STYLES.default;
+  if (!voices.length) loadVoices();
+  const english = voices.filter((v) => /^en[-_]US/i.test(v.lang)).concat(voices.filter((v) => /^en/i.test(v.lang) && !/^en[-_]US/i.test(v.lang)));
+  for (const name of style.names) {
+    const v = english.find((x) => x.name.toLowerCase().includes(name.toLowerCase()));
+    if (v) return v;
+  }
+  return null; // device default voice, but we still apply the style's pitch and rate
+}
+
+function makeUtterance(text, styleKey = state.settings.voice, speed = state.settings.rate) {
+  const style = VOICE_STYLES[styleKey] || VOICE_STYLES.default;
+  const u = new SpeechSynthesisUtterance(text);
+  const v = pickVoice(styleKey);
+  if (v) { u.voice = v; u.lang = v.lang; } else { u.lang = "en-US"; }
+  u.pitch = style.pitch;
+  u.rate = Math.min(2, Math.max(0.5, style.rate * (Number(speed) || 1)));
+  return u;
+}
+
 // ---------------- Read aloud ----------------
 // We speak ONE sentence per utterance and track the position ourselves,
 // because speechSynthesis.pause()/resume() is unreliable across browsers.
@@ -448,9 +499,7 @@ reader.speakCurrent = function () {
   const s = state.segments[reader.pos];
   highlight(reader.pos);
   if (oneAtATime() && s.card !== state.page) goToPage(s.card, false);
-  const u = new SpeechSynthesisUtterance(s.text);
-  u.rate = Number(state.settings.rate) || 1;
-  u.lang = "en-US";
+  const u = makeUtterance(s.text);
   u.onend = () => {
     if (my !== reader.token || !reader.playing) return;
     reader.pos++;
@@ -654,9 +703,7 @@ function speakOnce(text) {
   if (!("speechSynthesis" in window)) return;
   speechSynthesis.cancel();
   sentences(text).forEach((s) => {
-    const u = new SpeechSynthesisUtterance(s);
-    u.rate = Number(state.settings.rate) || 1;
-    u.lang = "en-US";
+    const u = makeUtterance(s);
     speechSynthesis.speak(u);
   });
 }
@@ -774,5 +821,3 @@ function stopListening() {
 applySettings();
 if (state.settings.saved) showScreen("home");
 else { fillSettingsForm(); showScreen("settings"); }
-// Chrome loads voices lazily; touching the list early avoids a silent first utterance.
-if ("speechSynthesis" in window) speechSynthesis.getVoices();

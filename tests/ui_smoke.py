@@ -31,13 +31,15 @@ def check(cond, msg):
         failures.append(msg)
 
 
-def set_profile(page, needs):
+def set_profile(page, needs, voice=None):
     page.goto(BASE)
     page.evaluate("localStorage.clear()")
     page.reload()
     check(page.is_visible("#screen-settings"), "first visit shows the needs screen")
     for n in needs:
         page.check(f"input[name=needs][value={n}]")
+    if voice:
+        page.select_option("#voice", voice)
     page.click("#settings-form button[type=submit]")
     check(page.is_visible("#screen-home"), f"saved profile {needs} and reached home")
 
@@ -52,7 +54,9 @@ with sync_playwright() as p:
     page.on("console", lambda m: m.type == "error" and errors.append(m.text))
 
     # --- Blind / low vision: auto read, interrupt with Q, resume on same sentence
-    set_profile(page, ["blind_low_vision"])
+    set_profile(page, ["blind_low_vision"], voice="warm")
+    check(page.evaluate("JSON.parse(localStorage.getItem('carebridge.settings')).voice") == "warm", "voice style is saved")
+    check(abs(page.evaluate("makeUtterance('hi').pitch") - 1.1) < 0.01, "warm voice style applies its pitch")
     check(page.evaluate("document.documentElement.classList.contains('high-contrast')"), "blind profile turns on high contrast")
     page.click("[data-sample=bill]")
     page.wait_for_selector("#screen-result:not([hidden])")
@@ -104,6 +108,11 @@ with sync_playwright() as p:
     check(page.locator("text=Make it even simpler").first.is_visible(), "'Make it even simpler' button shown")
 
     # --- Deaf / HoH: no audio, write instead of call
+    page.goto(BASE)
+    page.evaluate("localStorage.clear()")
+    page.reload()
+    page.check("input[name=needs][value=deaf_hoh]")
+    check(not page.is_visible("#voice"), "voice controls hidden for Deaf/HoH")
     set_profile(page, ["deaf_hoh"])
     page.click("[data-sample=bill]")
     page.wait_for_selector("#screen-result:not([hidden])")
