@@ -94,7 +94,8 @@ function loadSettings() {
   const defaults = { needs: [], textSize: "normal", contrast: false, dyslexia: false, autoRead: false, caregiver: false, rate: "1", voice: "female", showMascot: true, saved: false };
   try {
     const s = Object.assign(defaults, JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}"));
-    if (!["female", "male", "natural"].includes(s.voice)) s.voice = s.voice === "calm" ? "male" : "female"; // older saved styles
+    if (s.voice === "natural") s.voice = "eleven:mommy";
+    if (!["female", "male"].includes(s.voice) && !/^eleven:/.test(s.voice)) s.voice = s.voice === "calm" ? "male" : "female"; // older saved styles
     return s;
   } catch (e) {
     return defaults;
@@ -160,11 +161,11 @@ const VOICE_NOTE = "These are your device's built-in voices. For the most natura
 $("#preview-voice").addEventListener("click", () => {
   const f = $("#settings-form");
   stopAllSpeech();
-  if (f.voice.value === "natural" && natural.available) {
-    $("#voice-note").textContent = "Using: the natural voice (ElevenLabs). The text being read is sent to ElevenLabs to make the audio.";
+  if (f.voice.value.startsWith("eleven:") && natural.available) {
+    $("#voice-note").textContent = "Using: a natural ElevenLabs voice. The text being read is sent to ElevenLabs to make the audio.";
     natural.play("Hi, I'm here to help you read your papers.", () => true, () => {}, () => {
       $("#voice-note").textContent = "The natural voice isn't working right now. Check the ElevenLabs key and voice ID.";
-    }, f.rate.value);
+    }, f.rate.value, f.voice.value.slice(7));
     return;
   }
   if (!("speechSynthesis" in window)) return announce("Read aloud isn't available in this browser.");
@@ -551,6 +552,7 @@ function pickVoice(styleKey) {
 }
 
 function makeUtterance(text, styleKey = state.settings.voice, speed = state.settings.rate) {
+  if (styleKey === "eleven:male") styleKey = "male"; // natural voice fallback keeps the same gender
   const style = VOICE_STYLES[styleKey] || VOICE_STYLES.female;
   const u = new SpeechSynthesisUtterance(text);
   const v = pickVoice(styleKey);
@@ -565,23 +567,25 @@ const natural = {
   available: false,
   failed: false,
   audio: new Audio(),
-  cache: new Map(), // sentence -> Promise<blob URL>, kept in this tab's memory only
-  url(text) {
-    if (!natural.cache.has(text)) {
-      const p = fetch("/api/tts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }) })
+  cache: new Map(), // "voice|sentence" -> Promise<blob URL>, kept in this tab's memory only
+  voice() { return state.settings.voice.slice(7); }, // "eleven:male" -> "male"
+  url(text, voice = natural.voice()) {
+    const key = `${voice}|${text}`;
+    if (!natural.cache.has(key)) {
+      const p = fetch("/api/tts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text, voice }) })
         .then(async (r) => {
           if (!r.ok) throw new Error(((await r.json().catch(() => ({}))).error) || "tts failed");
           return URL.createObjectURL(await r.blob());
         });
-      p.catch(() => natural.cache.delete(text));
-      natural.cache.set(text, p);
+      p.catch(() => natural.cache.delete(key));
+      natural.cache.set(key, p);
     }
-    return natural.cache.get(text);
+    return natural.cache.get(key);
   },
   prefetch(text) { if (text) natural.url(text).catch(() => {}); },
-  async play(text, isCurrent, onend, onerror, speed = state.settings.rate) {
+  async play(text, isCurrent, onend, onerror, speed = state.settings.rate, voice = natural.voice()) {
     try {
-      const src = await natural.url(text);
+      const src = await natural.url(text, voice);
       if (!isCurrent()) return;
       const a = natural.audio;
       a.onended = onend;
@@ -604,7 +608,7 @@ const natural = {
     announce("The natural voice isn't working right now, so I'm using the device voice.");
   },
 };
-const useNatural = () => natural.available && !natural.failed && state.settings.voice === "natural";
+const useNatural = () => natural.available && !natural.failed && state.settings.voice.startsWith("eleven:");
 
 function stopAllSpeech() {
   if ("speechSynthesis" in window) speechSynthesis.cancel();
@@ -612,10 +616,10 @@ function stopAllSpeech() {
 }
 
 fetch("/api/config").then((r) => r.json()).then((cfg) => {
-  if (!cfg.natural_voice) return;
+  if (!cfg.natural_voice || !(cfg.natural_voices || []).length) return;
   natural.available = true;
-  $("#voice").prepend(el("option", { value: "natural" }, "Natural voice (ElevenLabs)"));
-  if (state.settings.voice === "natural") $("#voice").value = "natural";
+  $("#voice").prepend(...cfg.natural_voices.map((v) => el("option", { value: `eleven:${v.key}` }, v.label)));
+  if ($(`#voice option[value="${state.settings.voice}"]`)) $("#voice").value = state.settings.voice;
 }).catch(() => {});
 
 // ---------------- Read aloud ----------------

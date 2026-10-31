@@ -75,7 +75,7 @@ AWS_BEARER_TOKEN_BEDROCK=your-bedrock-api-key
 
 The app uses Claude via the Amazon Bedrock Converse API in `us-east-1`. Without a key, a few answers still work offline ("Say that again", "Say it simpler", "What do I need to do?" come from the cached document).
 
-**Optional natural voice (ElevenLabs):** add `ELEVENLABS_API_KEY` and `ELEVENLABS_VOICE_ID` to `.env` and restart. A *Natural voice (ElevenLabs)* option then appears under Voice. The key stays on the server. Only the sentence being read is sent to ElevenLabs, one sentence at a time, and nothing is stored. If ElevenLabs fails, CareBridge carries on with the device voice.
+**Optional natural voices (ElevenLabs):** add `ELEVENLABS_API_KEY` to `.env` (and optionally `ELEVENLABS_VOICE_MOMMY` / `ELEVENLABS_VOICE_MALE` voice IDs) and restart. *Mommy (natural voice)* and *Male (natural voice)* then appear under Voice. Free ElevenLabs accounts can't use Voice Library voices through the API, so if a chosen voice is refused, CareBridge uses ElevenLabs' default voices Matilda and Brian instead. The key stays on the server. Only the sentence being read is sent to ElevenLabs, one sentence at a time, and nothing is stored. If ElevenLabs fails, CareBridge carries on with the device voice.
 
 Optional: `PORT=5050 python backend/app.py` to use another port, `python backend/test_bedrock.py` to check your Bedrock access.
 

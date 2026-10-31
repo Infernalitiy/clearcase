@@ -55,7 +55,7 @@ with sync_playwright() as p:
 
     # --- Blind / low vision: auto read, interrupt with Q, resume on same sentence
     set_profile(page, ["blind_low_vision"], voice="male")
-    check(page.evaluate("[...document.querySelectorAll('#voice option')].map(o => o.value).join()") == "female,male", "voice choices are Female and Male")
+    check(page.evaluate("[...document.querySelectorAll('#voice option')].map(o => o.value).filter(v => !v.startsWith('eleven:')).join()") == "female,male", "device voice choices are Female and Male")
     check(page.evaluate("JSON.parse(localStorage.getItem('carebridge.settings')).voice") == "male", "voice choice is saved")
     check(page.evaluate("makeUtterance('hi').pitch") < 1, "male voice without a male device voice uses a lower pitch")
     check(page.evaluate("document.documentElement.classList.contains('high-contrast')"), "blind profile turns on high contrast")
@@ -160,14 +160,16 @@ with sync_playwright() as p:
             route.fulfill(status=502, json={"error": "fake failure", "code": "tts_error"})
         else:
             route.fulfill(status=200, body=clip, headers={"Content-Type": "audio/wav"})
-    page.route("**/api/config", lambda r: r.fulfill(json={"natural_voice": True}))
+    page.route("**/api/config", lambda r: r.fulfill(json={"natural_voice": True, "natural_voices": [
+        {"key": "mommy", "label": "Mommy (natural voice)"}, {"key": "male", "label": "Male (natural voice)"}]}))
     page.route("**/api/tts", fake_tts)
     page.goto(BASE)
     page.evaluate("localStorage.clear()")
     page.reload()
-    page.wait_for_selector("#voice option[value=natural]", state="attached")
+    page.wait_for_selector("#voice option[value='eleven:mommy']", state="attached")
+    check(page.locator("#voice option[value='eleven:male']").count() == 1, "Mommy and Male natural voices offered")
     page.uncheck("input[name=autoRead]")
-    page.select_option("#voice", "natural")
+    page.select_option("#voice", "eleven:mommy")
     page.click("#settings-form button[type=submit]")
     page.click("[data-sample=bill]")
     page.wait_for_selector("#screen-result:not([hidden])")

@@ -378,56 +378,80 @@ def ask():
 # ---------- Natural voice (optional, ElevenLabs) ----------
 
 ELEVEN_MODEL = os.environ.get("ELEVENLABS_MODEL_ID", "eleven_flash_v2_5")
+# Each slot: (label, env var with the chosen voice ID, ElevenLabs default voice used if that one can't be used).
+# Free ElevenLabs accounts can't use Voice Library voices through the API, so the defaults keep it working.
+ELEVEN_SLOTS = {
+    "mommy": ("Mommy (natural voice)", "ELEVENLABS_VOICE_MOMMY", "XrExE9yKIg1WjnnlVkGX"),  # default: Matilda, warm
+    "male": ("Male (natural voice)", "ELEVENLABS_VOICE_MALE", "nPczCjzI2devNBz1zQrb"),    # default: Brian, deep
+}
+_blocked_voices = set()  # voice IDs ElevenLabs refused (e.g. paid plan needed); skipped until restart
 
 
-def eleven_settings():
-    key = os.environ.get("ELEVENLABS_API_KEY", "").strip()
-    voice = os.environ.get("ELEVENLABS_VOICE_ID", "").strip()
-    return (key, voice) if key and re.fullmatch(r"[A-Za-z0-9]{10,40}", voice or "") else (None, None)
+def eleven_key():
+    return os.environ.get("ELEVENLABS_API_KEY", "").strip() or None
+
+
+def eleven_voice_ids(slot):
+    _label, env, default = ELEVEN_SLOTS[slot]
+    chosen = os.environ.get(env, "").strip() or (os.environ.get("ELEVENLABS_VOICE_ID", "").strip() if slot == "mommy" else "")
+    ids = [v for v in (chosen, default) if re.fullmatch(r"[A-Za-z0-9]{10,40}", v or "")]
+    return [v for i, v in enumerate(ids) if v not in ids[:i] and v not in _blocked_voices]
 
 
 @app.get("/api/config")
 def config():
-    return jsonify({"natural_voice": eleven_settings()[0] is not None})
+    voices = [{"key": k, "label": v[0]} for k, v in ELEVEN_SLOTS.items()] if eleven_key() else []
+    return jsonify({"natural_voice": bool(voices), "natural_voices": voices})
+
+
+def eleven_speak(key, voice_id, text):
+    req = urllib.request.Request(
+        f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}?output_format=mp3_44100_128",
+        data=json.dumps({"text": text, "model_id": ELEVEN_MODEL}).encode(),
+        headers={"xi-api-key": key, "Content-Type": "application/json", "Accept": "audio/mpeg"},
+        method="POST",
+    )
+    with urllib.request.urlopen(req, timeout=20) as r:
+        return r.read()
 
 
 @app.post("/api/tts")
 def tts():
     """Turn one short sentence into speech with ElevenLabs. Audio is returned, never stored."""
-    key, voice = eleven_settings()
+    key = eleven_key()
     if not key:
         raise ApiError("The natural voice isn't set up on this server.", 503, "no_tts")
     body = request.get_json(silent=True) or {}
     text = str(body.get("text") or "").strip()
+    slot = body.get("voice") if body.get("voice") in ELEVEN_SLOTS else "mommy"
     if not text:
         raise ApiError("No text to read.", 400, "no_text")
     if len(text) > 1500:
         raise ApiError("That text is too long to read in one go.", 400, "too_long")
-    req = urllib.request.Request(
-        f"https://api.elevenlabs.io/v1/text-to-speech/{voice}?output_format=mp3_44100_128",
-        data=json.dumps({"text": text, "model_id": ELEVEN_MODEL}).encode(),
-        headers={"xi-api-key": key, "Content-Type": "application/json", "Accept": "audio/mpeg"},
-        method="POST",
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=20) as r:
-            audio = r.read()
-    except urllib.error.HTTPError as e:
+    reasons = {401: "the ElevenLabs key was rejected or lacks text-to-speech permission",
+               404: "the ElevenLabs voice ID wasn't found",
+               429: "ElevenLabs is rate limiting or the quota is used up"}
+    error = "ElevenLabs returned an error"
+    for voice_id in eleven_voice_ids(slot):
         try:
-            detail = json.loads(e.read() or b"{}").get("detail") or {}
-            status = detail.get("status", "") if isinstance(detail, dict) else ""
-        except ValueError:
-            status = ""
-        log.error("ElevenLabs error %s %s", e.code, status)  # status code only, never the text
-        reasons = {401: "the ElevenLabs key was rejected or lacks text-to-speech permission",
-                   404: "the ElevenLabs voice ID wasn't found in your account",
-                   429: "ElevenLabs is rate limiting or the quota is used up"}
-        raise ApiError(f"The natural voice failed: {reasons.get(e.code, 'ElevenLabs returned an error')}"
-                       + (f" ({status})" if status else "") + ".", 502, "tts_error")
-    except Exception as e:
-        log.error("ElevenLabs call failed: %s", type(e).__name__)
-        raise ApiError("The natural voice didn't respond.", 502, "tts_error")
-    return Response(audio, mimetype="audio/mpeg")
+            return Response(eleven_speak(key, voice_id, text), mimetype="audio/mpeg")
+        except urllib.error.HTTPError as e:
+            try:
+                detail = json.loads(e.read() or b"{}").get("detail") or {}
+                status = (detail.get("status") or detail.get("code") or "") if isinstance(detail, dict) else ""
+            except ValueError:
+                status = ""
+            log.error("ElevenLabs error %s %s", e.code, status)  # status code only, never the text
+            if e.code in (402, 403, 404):  # this voice can't be used: try the default voice next
+                _blocked_voices.add(voice_id)
+                continue
+            error = reasons.get(e.code, error) + (f" ({status})" if status else "")
+            break
+        except Exception as e:
+            log.error("ElevenLabs call failed: %s", type(e).__name__)
+            error = "ElevenLabs didn't respond"
+            break
+    raise ApiError(f"The natural voice failed: {error}.", 502, "tts_error")
 
 
 # ---------- Frontend ----------
