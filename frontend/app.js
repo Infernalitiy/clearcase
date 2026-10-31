@@ -452,11 +452,13 @@ $("#next-btn").addEventListener("click", () => userMoveTo(state.page + 1));
 // Styles are built from the device's own voices plus pitch and rate. Names are tried in order.
 const VOICE_STYLES = {
   default: { names: [], pitch: 1, rate: 1 },
-  warm: { names: ["Microsoft Aria Online", "Microsoft Jenny", "Google US English", "Samantha", "Microsoft Zira", "Karen", "Female"], pitch: 1.1, rate: 0.9 },
-  calm: { names: ["Microsoft Guy", "Google UK English Male", "Daniel", "Microsoft David", "Alex", "Male"], pitch: 0.9, rate: 0.9 },
-  bright: { names: ["Microsoft Jenny", "Microsoft Aria", "Google US English", "Samantha", "Microsoft Zira", "Karen", "Female"], pitch: 1.25, rate: 1.05 },
-  clear: { names: ["Microsoft Aria", "Google US English", "Samantha", "Microsoft Zira", "Microsoft David"], pitch: 1, rate: 0.75 },
+  warm: { names: [/Microsoft (Aria|Jenny|Ava|Emma)/i, /Google US English/i, /Samantha/i, /Microsoft Zira/i, /Karen|Moira|Tessa/i, /\bFemale\b/i], pitch: 1.1, rate: 0.9 },
+  calm: { names: [/Microsoft (Guy|Andrew|Brian)/i, /Google UK English Male/i, /^Daniel/i, /Microsoft (David|Mark)/i, /^Alex$/i, /\bMale\b/i], pitch: 0.9, rate: 0.9 },
+  bright: { names: [/Microsoft (Jenny|Emma|Aria|Ava)/i, /Google US English/i, /Samantha/i, /Microsoft Zira/i, /Karen|Tessa/i, /\bFemale\b/i], pitch: 1.25, rate: 1.05 },
+  clear: { names: [/Microsoft (Aria|Jenny|Guy)/i, /Google US English/i, /Samantha/i, /Microsoft (Zira|David)/i], pitch: 1, rate: 0.75 },
 };
+// Keep novelty voices (e.g. macOS "Zarvox", "Bad News") out of a medical app.
+const NOVELTY_VOICES = /Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Deranged|Good News|Hysterical|Jester|Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox/i;
 let voices = [];
 function loadVoices() { voices = "speechSynthesis" in window ? speechSynthesis.getVoices() || [] : []; }
 if ("speechSynthesis" in window) { loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
@@ -464,9 +466,10 @@ if ("speechSynthesis" in window) { loadVoices(); speechSynthesis.onvoiceschanged
 function pickVoice(styleKey) {
   const style = VOICE_STYLES[styleKey] || VOICE_STYLES.default;
   if (!voices.length) loadVoices();
-  const english = voices.filter((v) => /^en[-_]US/i.test(v.lang)).concat(voices.filter((v) => /^en/i.test(v.lang) && !/^en[-_]US/i.test(v.lang)));
-  for (const name of style.names) {
-    const v = english.find((x) => x.name.toLowerCase().includes(name.toLowerCase()));
+  const usable = voices.filter((v) => !NOVELTY_VOICES.test(v.name));
+  const english = usable.filter((v) => /^en[-_]US/i.test(v.lang)).concat(usable.filter((v) => /^en/i.test(v.lang) && !/^en[-_]US/i.test(v.lang)));
+  for (const re of style.names) {
+    const v = english.find((x) => re.test(x.name));
     if (v) return v;
   }
   return null; // device default voice, but we still apply the style's pitch and rate
