@@ -156,11 +156,14 @@ function updateAudioSettings() {
 }
 $("#settings-form").addEventListener("change", updateAudioSettings);
 
+const VOICE_NOTE = "These are your device's built-in voices. For the most natural voices, open CareBridge in Microsoft Edge.";
 $("#preview-voice").addEventListener("click", () => {
   if (!("speechSynthesis" in window)) return announce("Read aloud isn't available in this browser.");
   const f = $("#settings-form");
   speechSynthesis.cancel();
-  speechSynthesis.speak(makeUtterance("Hi, I'm here to help you read your papers.", f.voice.value, f.rate.value));
+  const u = makeUtterance("Hi, I'm here to help you read your papers.", f.voice.value, f.rate.value);
+  $("#voice-note").textContent = `Using: ${u.voice ? u.voice.name : "your device's default voice"}. ` + VOICE_NOTE;
+  speechSynthesis.speak(u);
 });
 
 $("#settings-form").addEventListener("submit", (e) => {
@@ -511,14 +514,17 @@ $("#prev-btn").addEventListener("click", () => userMoveTo(state.page - 1));
 $("#next-btn").addEventListener("click", () => userMoveTo(state.page + 1));
 
 // ---------------- Voice styles ----------------
-// Female or male, chosen from the device's own voices. Names are tried in order.
+// Female or male, chosen from the device's own voices. Names are tried in order, most natural first:
+// Edge's neural "Online (Natural)" voices, then Google's online voices, then Apple's, then older local voices.
 // If the device has no matching voice, the default voice is used with a higher or lower pitch.
 const VOICE_STYLES = {
-  female: { names: [/Microsoft (Aria|Jenny|Ava|Emma|Michelle|Zira)/i, /Google US English/i, /Google UK English Female/i,
-    /^(Samantha|Karen|Moira|Tessa|Fiona|Victoria|Allison|Susan)\b/i, /\bFemale\b/i], fallbackPitch: 1.15 },
-  male: { names: [/Microsoft (Guy|Andrew|Brian|Christopher|Eric|Roger|David|Mark)/i, /Google UK English Male/i,
-    /^(Daniel|Alex|Aaron|Tom)\b/i, /\bMale\b/i], fallbackPitch: 0.8 },
+  female: { names: [/(Aria|Jenny|Ava|Emma|Michelle|Libby|Sonia|Natasha|Clara).*Natural/i, /Google US English/i,
+    /Google UK English Female/i, /^(Samantha|Karen|Moira|Tessa|Fiona|Victoria|Allison|Susan)\b/i, /Microsoft Zira/i,
+    /\bFemale\b/i], fallbackPitch: 1.15 },
+  male: { names: [/(Guy|Andrew|Brian|Christopher|Eric|Roger|Davis|Ryan|Thomas|William).*Natural/i, /Google UK English Male/i,
+    /^(Daniel|Alex|Aaron|Tom)\b/i, /Microsoft (David|Mark)/i, /\bMale\b/i], fallbackPitch: 0.8 },
 };
+let onlineVoicesFailed = false; // set if an online voice errors (e.g. offline); then only local voices are used
 // Keep novelty voices (e.g. macOS "Zarvox", "Bad News") out of a medical app.
 const NOVELTY_VOICES = /Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Deranged|Good News|Hysterical|Jester|Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox/i;
 let voices = [];
@@ -528,7 +534,7 @@ if ("speechSynthesis" in window) { loadVoices(); speechSynthesis.onvoiceschanged
 function pickVoice(styleKey) {
   const style = VOICE_STYLES[styleKey] || VOICE_STYLES.female;
   if (!voices.length) loadVoices();
-  const usable = voices.filter((v) => !NOVELTY_VOICES.test(v.name));
+  const usable = voices.filter((v) => !NOVELTY_VOICES.test(v.name) && (!onlineVoicesFailed || v.localService));
   const english = usable.filter((v) => /^en[-_]US/i.test(v.lang)).concat(usable.filter((v) => /^en/i.test(v.lang) && !/^en[-_]US/i.test(v.lang)));
   for (const re of style.names) {
     const v = english.find((x) => re.test(x.name));
@@ -583,6 +589,11 @@ reader.speakCurrent = function () {
   };
   u.onerror = (e) => {
     if (my !== reader.token || e.error === "interrupted" || e.error === "canceled") return;
+    if (u.voice && !u.voice.localService && !onlineVoicesFailed) {
+      onlineVoicesFailed = true; // the natural online voice failed: retry the same sentence with a local voice
+      reader.speakCurrent();
+      return;
+    }
     reader.playing = false;
     mascot.set("idle");
     updateReadUi();

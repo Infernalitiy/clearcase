@@ -45,7 +45,7 @@ A large **I'm confused / Ask** button is always visible, also on the **Q** key. 
 - Document text is treated as data, never as instructions (prompt-injection resistant prompts).
 
 ### Also included
-- **Female or male voice**, with a Preview button. CareBridge picks the best matching voice already on your device. If there isn't one, it uses the default voice with a higher or lower pitch. Voices sound different on different computers and browsers.
+- **Female or male voice**, with a Preview button that shows which voice is in use. CareBridge picks the most natural matching voice the browser offers: Edge's neural "Online (Natural)" voices first, then Google's online voices, then local voices. **For the most natural, human-sounding voices, use Microsoft Edge.** Chrome on Windows offers fewer natural voices. If there isn't one, it uses the default voice with a higher or lower pitch. Voices sound different on different computers and browsers.
 - **Bridgey, the helper character:** an original mascot in the top right who "does the talking". Its mouth moves while reading, and it shows when it's paused, listening or thinking. Its speech bubble shows the sentence being read, like live captions. Bridgey is decorative (screen readers skip it), stops moving when reduced motion is on, and can be switched off in settings.
 - **iOS-style interface:** frosted-glass cards, switches and a segmented control. The colours are adjusted to meet WCAG AA contrast, and the glass turns off in high-contrast mode and when the device asks for reduced transparency.
 - PDF upload (first 3 pages, including scanned PDFs), JPG and PNG.
