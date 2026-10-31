@@ -62,7 +62,7 @@ pip install -r requirements.txt
 python backend/app.py
 ```
 
-Open **http://localhost:5000**.
+Open **https://infernalitiy.github.io/clearcase/**.
 
 **Sample mode works with no API key.** Click *Try a sample document* to load one of three fictional documents (a hospital bill, an insurance denial, discharge instructions). Their analysis is cached in `samples/*.json`.
 
