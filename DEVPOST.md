@@ -17,7 +17,7 @@ You take a photo of one medical document (a bill, an insurance denial, discharge
 - **Cognitive / learning disabilities:** one short, simple card at a time with Next/Back, a "Make it even simpler" button, and a dyslexia-friendly font option.
 - **Fatigue / motor:** a big-button checklist of what to do, first, plus one-tap questions so nothing needs typing.
 
-**Voice choice and Bridgey.** Users can pick a warm female (mom-like), female or male voice from the voices already on their device. Bridgey, our original helper character, "does the talking" in the corner. Its speech bubble shows each sentence as it's read, like live captions, which helps anyone who is hard of hearing or wants to read along.
+**Voice choice and Bridgey.** Users can pick a female or male voice from the voices already on their device. Bridgey, our original helper character, "does the talking" in the corner. Its speech bubble shows each sentence as it's read, like live captions, which helps anyone who is hard of hearing or wants to read along.
 
 **The key feature is interrupt-and-ask.** A big "I'm confused / Ask" button (or the Q key) stops the read-aloud instantly and remembers the exact sentence. You ask by typing, by voice, or with one tap ("What does this mean?", "Say it simpler"). You get an answer **with the exact quote from your document**, and a Continue button picks up on the same sentence.
 
@@ -31,7 +31,7 @@ You take a photo of one medical document (a bill, an insurance denial, discharge
 - **Grounded answers:** the ask endpoint answers only from the document, returns a source quote, and the server checks that the quote really appears in the document before the UI shows it as verified.
 - **Prompt-injection resistance:** document text is wrapped and explicitly treated as data, never instructions.
 - **Frontend:** plain HTML, CSS and JavaScript with no framework and no build step. Semantic HTML, a native `<dialog>`, ARIA live regions ("Reading document", "Paused", "Answer ready"), visible focus, reduced-motion support and 48–64px touch targets.
-- **Voice choice:** a preferred list of device voices for each option, matched by name (English first, novelty voices excluded), with pitch and speed tuning and a pitch fallback when the device has no match. There is no cloud TTS: everything runs in the browser.
+- **Female/male voice:** a preferred list of device voices for each, matched by name (English first, novelty voices excluded), with a pitch fallback when the device has no match. There is no cloud TTS: everything runs in the browser.
 - **Bridgey:** an inline SVG character whose state (speaking, paused, listening, thinking, happy) is driven by the same reader and Ask code. It is marked decorative so screen readers aren't distracted, and it respects reduced motion.
 - **iOS-style UI:** frosted glass with solid fallbacks, real checkboxes styled as switches, and real radio buttons styled as a segmented control. We darkened Apple's system blue and green to pass WCAG AA.
 - **Read-aloud engine:** browser speech synthesis, one sentence per utterance, with our own position tracking, because `speechSynthesis.pause()`/`resume()` are unreliable across browsers.
@@ -66,7 +66,6 @@ You take a photo of one medical document (a bill, an insurance denial, discharge
 - More languages, and sign language video explanations.
 - On-device history to track bills and appeal deadlines over time.
 - Appeal letter and payment-plan request templates.
-- Optional premium neural voices from a TTS API, after a privacy review, since it would send document text to another service.
 
 ## Built with
 
