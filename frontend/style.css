@@ -317,3 +317,58 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.45); }
   .card { break-inside: avoid; border: 2px solid #000; box-shadow: none; background: #fff; backdrop-filter: none; }
   body { background: #fff; color: #000; padding: 0; }
 }
+
+/* ---------- Bridgey, the helper character (decorative) ---------- */
+:root { --mascot-cheek: #ffb3b3; --mascot-accent: #ffd2c2; }
+:root[data-voice="warm"] { --mascot-cheek: #ffab8f; --mascot-accent: #ffd8bd; }
+:root[data-voice="calm"] { --mascot-cheek: #a9c8f5; --mascot-accent: #c5e3ff; }
+:root[data-voice="bright"] { --mascot-cheek: #ffc86b; --mascot-accent: #ffe7a3; }
+:root[data-voice="clear"] { --mascot-cheek: #9fd8b4; --mascot-accent: #cdeedb; }
+.no-mascot .mascot, .no-mascot .mascot-bubble { display: none !important; }
+
+.mascot { width: 96px; height: 96px; flex: none; pointer-events: none; }
+.mascot svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.15)); }
+.mascot .m-cheek { fill: var(--mascot-cheek); opacity: 0.85; }
+.mascot .m-body { transform-box: fill-box; transform-origin: 50% 100%; }
+.mascot .m-open, .mascot .m-smile, .mascot .m-think, .mascot .m-pause, .mascot .m-listen { display: none; }
+.mascot.mouth-open .m-closed { display: none; }
+.mascot.mouth-open .m-open { display: inline; }
+.mascot[data-state="happy"] .m-closed { display: none; }
+.mascot[data-state="happy"] .m-smile { display: inline; }
+.mascot[data-state="thinking"] .m-think { display: inline; }
+.mascot[data-state="thinking"] .m-eyes { transform: translate(3px, -3px); }
+.mascot[data-state="paused"] .m-pause { display: inline; }
+.mascot[data-state="listening"] .m-listen { display: inline; }
+.mascot[data-state="idle"] .m-body { animation: bob 3.2s ease-in-out infinite; }
+.mascot[data-state="happy"] .m-body { animation: pop 0.5s ease-out; }
+.mascot[data-state="thinking"] .m-think { animation: blink 1s ease-in-out infinite; }
+@keyframes bob { 50% { transform: translateY(-4px); } }
+@keyframes pop { 40% { transform: scale(1.12) translateY(-6px); } }
+@keyframes blink { 50% { opacity: 0.35; } }
+
+.header-right { position: relative; }
+.mascot-small { position: absolute; top: 0.6rem; right: 1rem; width: 72px; height: 72px; }
+.dialog-inner { position: relative; }
+#ask-title { padding-right: 5rem; }
+
+/* Live caption bubble under the header, pointing up at Bridgey. */
+.mascot-bubble {
+  position: absolute; top: calc(100% + 12px); left: 0; right: 0; z-index: 35; margin: 0;
+  min-width: 14rem; padding: 0.7rem 1rem; border-radius: 20px;
+  background: #ffffff; color: var(--fg); border: 2px solid var(--mascot-accent);
+  box-shadow: var(--shadow); font-size: 1.05rem; font-weight: 500; line-height: 1.4; pointer-events: none;
+}
+.mascot-bubble::before {
+  content: ""; position: absolute; top: -10px; left: 39px; width: 18px; height: 18px;
+  background: #ffffff; border-left: 2px solid var(--mascot-accent); border-top: 2px solid var(--mascot-accent);
+  transform: rotate(45deg);
+}
+.high-contrast .mascot-bubble, .high-contrast .mascot-bubble::before { background: #000; color: #fff; border-color: #fff; }
+.high-contrast .mascot svg { filter: none; }
+
+@media (max-width: 560px) {
+  .mascot { width: 64px; height: 64px; }
+  .mascot-small { width: 56px; height: 56px; }
+  .mascot-bubble::before { left: 23px; }
+  .mascot-bubble { left: auto; width: min(18rem, calc(100vw - 2rem)); }
+}

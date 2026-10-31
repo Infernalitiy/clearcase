@@ -12,9 +12,14 @@
 
   <header class="site-header">
     <a class="brand" href="#" id="brand-link" aria-label="CareBridge home">Care<span>Bridge</span></a>
-    <nav aria-label="Main">
-      <button type="button" id="open-settings" class="btn btn-secondary">My needs &amp; settings</button>
-    </nav>
+    <div class="header-right">
+      <!-- Bridgey, the helper character. Decorative: everything it shows is also in the page and live region. -->
+      <div id="mascot" class="mascot" data-state="idle" aria-hidden="true"></div>
+      <nav aria-label="Main">
+        <button type="button" id="open-settings" class="btn btn-secondary">My needs &amp; settings</button>
+      </nav>
+      <p id="mascot-bubble" class="mascot-bubble" aria-hidden="true" hidden></p>
+    </div>
   </header>
 
   <!-- Screen reader announcements -->
@@ -66,6 +71,7 @@
           <label class="choice"><input type="checkbox" name="dyslexia"> Dyslexia-friendly font and spacing</label>
           <label class="choice"><input type="checkbox" name="autoRead"> Start reading aloud when a document opens</label>
           <label class="choice"><input type="checkbox" name="caregiver"> I'm a caregiver helping someone else with their paperwork</label>
+          <label class="choice"><input type="checkbox" name="showMascot"> Show the helper character (Bridgey)</label>
           <div id="audio-settings" class="group-extra">
             <label for="rate" class="field-label">Reading speed</label>
             <select id="rate" name="rate">
@@ -173,6 +179,7 @@
   <!-- ===== Ask dialog ===== -->
   <dialog id="ask-dialog" aria-labelledby="ask-title">
     <div class="dialog-inner">
+      <div class="mascot mascot-small" data-state="idle" aria-hidden="true"></div>
       <h2 id="ask-title">Ask a question</h2>
       <p id="ask-context" class="hint"></p>
 

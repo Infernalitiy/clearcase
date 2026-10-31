@@ -37,9 +37,61 @@ const reader = {
   wasPlaying: false,
 };
 
+// ---------------- Bridgey, the helper character ----------------
+// Purely decorative (aria-hidden). States: idle, speaking, paused, listening, thinking, happy.
+const MASCOT_SVG = `<svg viewBox="0 0 120 120" focusable="false">
+  <g class="m-body">
+    <path d="M58 17 C54 6 68 3 66 12" fill="none" stroke="#2b2b2b" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="60" cy="62" r="45" fill="#ffffff" stroke="#2b2b2b" stroke-width="3"/>
+    <g transform="rotate(-28 41 33)">
+      <rect x="28" y="27" width="27" height="11" rx="5.5" fill="#f7c59f" stroke="#2b2b2b" stroke-width="2"/>
+      <rect x="37.5" y="28" width="8" height="9" fill="#fbe2cc"/>
+    </g>
+    <g class="m-eyes">
+      <ellipse cx="44" cy="60" rx="7" ry="9" fill="#2b2b2b"/><ellipse cx="76" cy="60" rx="7" ry="9" fill="#2b2b2b"/>
+      <circle cx="46.5" cy="56" r="2.6" fill="#fff"/><circle cx="78.5" cy="56" r="2.6" fill="#fff"/>
+    </g>
+    <ellipse class="m-cheek" cx="31" cy="76" rx="7" ry="4.5"/><ellipse class="m-cheek" cx="89" cy="76" rx="7" ry="4.5"/>
+    <path class="m-closed" d="M53 80 Q60 86 67 80" fill="none" stroke="#2b2b2b" stroke-width="3" stroke-linecap="round"/>
+    <ellipse class="m-open" cx="60" cy="83" rx="6.5" ry="6" fill="#8a3b3b" stroke="#2b2b2b" stroke-width="2"/>
+    <path class="m-smile" d="M49 78 Q60 95 71 78 Z" fill="#8a3b3b" stroke="#2b2b2b" stroke-width="2" stroke-linejoin="round"/>
+  </g>
+  <g class="m-think" fill="#2b2b2b"><circle cx="100" cy="24" r="4"/><circle cx="110" cy="14" r="3"/></g>
+  <g class="m-pause" fill="#2b2b2b"><rect x="98" y="8" width="5" height="15" rx="1.5"/><rect x="107" y="8" width="5" height="15" rx="1.5"/></g>
+  <g class="m-listen" fill="none" stroke="#2b2b2b" stroke-width="3" stroke-linecap="round"><path d="M108 52 q5 10 0 20"/><path d="M113 46 q7 16 0 32"/></g>
+</svg>`;
+$$(".mascot").forEach((m) => { m.innerHTML = MASCOT_SVG; });
+
+const mascot = {
+  state: "idle", flap: null, happyTimer: null,
+  set(next) {
+    mascot.state = next;
+    clearInterval(mascot.flap);
+    mascot.flap = null;
+    $$(".mascot").forEach((m) => { m.dataset.state = next; m.classList.remove("mouth-open"); });
+    if (next === "speaking") {
+      // The mouth opens and closes while talking. This is an expression change, so it stays on with reduced motion.
+      mascot.flap = setInterval(() => $$(".mascot").forEach((m) => m.classList.toggle("mouth-open")), 150);
+    } else {
+      mascot.caption("");
+    }
+  },
+  happy() {
+    mascot.set("happy");
+    clearTimeout(mascot.happyTimer);
+    mascot.happyTimer = setTimeout(() => { if (mascot.state === "happy") mascot.set("idle"); }, 1500);
+  },
+  // The speech bubble works as captions for what is being read aloud.
+  caption(text) {
+    const b = $("#mascot-bubble");
+    b.textContent = text || "";
+    b.hidden = !text;
+  },
+};
+
 // ---------------- Settings ----------------
 function loadSettings() {
-  const defaults = { needs: [], textSize: "normal", contrast: false, dyslexia: false, autoRead: false, caregiver: false, rate: "1", voice: "default", saved: false };
+  const defaults = { needs: [], textSize: "normal", contrast: false, dyslexia: false, autoRead: false, caregiver: false, rate: "1", voice: "default", showMascot: true, saved: false };
   try {
     return Object.assign(defaults, JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}"));
   } catch (e) {
@@ -63,6 +115,8 @@ function applySettings() {
   root.classList.toggle("high-contrast", s.contrast);
   root.classList.toggle("dyslexia", s.dyslexia);
   root.classList.toggle("big-targets", has("fatigue_motor") || has("blind_low_vision"));
+  root.classList.toggle("no-mascot", !s.showMascot);
+  root.dataset.voice = s.voice;
   $("#profile-summary-text").textContent = s.needs.length
     ? s.needs.map((n) => NEED_NAMES[n]).join(", ")
     : "no needs chosen yet";
@@ -79,6 +133,7 @@ function fillSettingsForm() {
   f.caregiver.checked = s.caregiver;
   f.rate.value = s.rate;
   f.voice.value = s.voice;
+  f.showMascot.checked = s.showMascot;
   updateAudioSettings();
 }
 
@@ -118,6 +173,7 @@ $("#settings-form").addEventListener("submit", (e) => {
     caregiver: f.caregiver.checked,
     rate: f.rate.value,
     voice: f.voice.value,
+    showMascot: f.showMascot.checked,
     saved: true,
   };
   saveSettings();
@@ -159,6 +215,7 @@ window.addEventListener("afterprint", () => { openedForPrint.forEach((d) => { d.
 
 function goHome() {
   reader.stop();
+  mascot.set("idle");
   state.doc = null;
   $("#upload-form").reset();
   showScreen("home");
@@ -214,6 +271,7 @@ function showUploadError(msg) {
 
 async function loadDocument(fetcher) {
   reader.stop();
+  mascot.set("thinking");
   showScreen("loading");
   $("#main").setAttribute("aria-busy", "true");
   announce("Reading your document. Please wait.");
@@ -221,6 +279,7 @@ async function loadDocument(fetcher) {
     const doc = await fetcher();
     showResult(doc);
   } catch (e) {
+    mascot.set("idle");
     showUploadError(e.message);
   } finally {
     $("#main").removeAttribute("aria-busy");
@@ -395,6 +454,7 @@ function showResult(doc, opts = {}) {
   goToPage(state.page, false);
   updateReadUi();
   announce(`Document ready: ${doc.title}.` + (audioOn() ? " Press Read aloud to listen. Press Q at any time to ask a question." : " Press Q at any time to ask a question."));
+  if (!opts.keepPosition) mascot.happy();
   if (audioOn() && state.settings.autoRead && !opts.keepPosition) setTimeout(() => reader.play(), 900);
 }
 
@@ -501,6 +561,8 @@ reader.speakCurrent = function () {
   const my = ++reader.token;
   const s = state.segments[reader.pos];
   highlight(reader.pos);
+  mascot.set("speaking");
+  mascot.caption(s.text);
   if (oneAtATime() && s.card !== state.page) goToPage(s.card, false);
   const u = makeUtterance(s.text);
   u.onend = () => {
@@ -510,6 +572,7 @@ reader.speakCurrent = function () {
       reader.playing = false;
       reader.pos = 0;
       highlight(-1);
+      mascot.set("idle");
       updateReadUi();
       announce("Finished reading.");
       return;
@@ -520,6 +583,7 @@ reader.speakCurrent = function () {
   u.onerror = (e) => {
     if (my !== reader.token || e.error === "interrupted" || e.error === "canceled") return;
     reader.playing = false;
+    mascot.set("idle");
     updateReadUi();
     announce("Read aloud stopped because of a browser problem.");
   };
@@ -563,6 +627,7 @@ function updateReadUi() {
 $("#read-btn").addEventListener("click", () => reader.play());
 $("#stop-btn").addEventListener("click", () => {
   reader.stop();
+  mascot.set("paused");
   announce("Paused.");
   $("#read-btn").focus();
 });
@@ -581,6 +646,7 @@ function openAsk(prefill) {
   reader.wasPlaying = reader.playing;
   reader.stop();               // stop audio immediately, keep the position
   stopListening();
+  mascot.set("paused");
   const card = currentCard();
   $("#ask-context").textContent = card && card.fact ? `About: ${card.fact.label}` : "About: the whole document";
   $("#question").value = "";
@@ -594,7 +660,9 @@ function openAsk(prefill) {
 
 function closeAsk(resume) {
   stopListening();
+  onceToken++;
   if ("speechSynthesis" in window) speechSynthesis.cancel();
+  mascot.set(reader.wasPlaying ? "paused" : "idle");
   if (dialog.open) dialog.close();
   if (resume && reader.wasPlaying) {
     reader.play();             // picks up on the same sentence
@@ -660,6 +728,7 @@ async function ask(question) {
   showAnswer({ answer: "Thinking...", source_quote: "" }, true);
   let result = localAnswer(question, card);
   if (!result) {
+    mascot.set("thinking");
     try {
       result = await api("/api/ask", {
         method: "POST",
@@ -696,17 +765,25 @@ function showAnswer(r, pending = false, extraActions = []) {
   const actions = $("#answer-actions");
   actions.replaceChildren(...extraActions);
   if (pending) return;
+  if (r.error) mascot.set("idle"); else mascot.happy();
   announce("Answer ready. " + r.answer);
   box.focus();
   if (audioOn() && !r.error) speakOnce(r.answer);
 }
 
 // Speak an answer sentence by sentence (short utterances are more reliable in Chrome).
+let onceToken = 0;
 function speakOnce(text) {
   if (!("speechSynthesis" in window)) return;
   speechSynthesis.cancel();
-  sentences(text).forEach((s) => {
+  const my = ++onceToken;
+  const parts = sentences(text);
+  mascot.set("speaking");
+  mascot.caption(parts[0] || "");
+  parts.forEach((s, i) => {
     const u = makeUtterance(s);
+    u.onstart = () => { if (my === onceToken) mascot.caption(s); };
+    if (i === parts.length - 1) u.onend = () => { if (my === onceToken && !reader.playing) mascot.set("idle"); };
     speechSynthesis.speak(u);
   });
 }
@@ -717,6 +794,7 @@ async function makeSimpler(card, idx) {
   const f = card.fact;
   const status = $(`.card[data-card="${idx}"] .plain`);
   status.textContent = "Making it simpler...";
+  mascot.set("thinking");
   announce("Making it simpler.");
   try {
     const r = await api("/api/ask", {
@@ -733,6 +811,7 @@ async function makeSimpler(card, idx) {
   goToPage(idx);
   reader.pos = firstSegOf(idx);
   updateReadUi();
+  if (f.simpleOverride) mascot.happy(); else mascot.set("idle");
   announce(f.simpleOverride ? "Here it is in simpler words." : "Couldn't make it simpler right now.");
   if (audioOn() && f.simpleOverride) speakOnce(f.simpleOverride);
 }
@@ -748,6 +827,7 @@ async function draftMessage(contact) {
   $("#ask-context").textContent = `Writing a message to ${to}`;
   const my = ++askToken;
   showAnswer({ answer: "Writing your message...", source_quote: "" }, true);
+  mascot.set("thinking");
   let r;
   try {
     r = await api("/api/ask", { method: "POST", headers: { "Content-Type": "application/json" },
@@ -812,6 +892,8 @@ $("#mic-btn").addEventListener("click", () => {
 });
 
 function setMic(on) {
+  if (on) mascot.set("listening");
+  else if (mascot.state === "listening") mascot.set("idle");
   $("#mic-btn").setAttribute("aria-pressed", String(on));
   $("#mic-btn").textContent = on ? "Stop listening" : "Speak my question";
 }

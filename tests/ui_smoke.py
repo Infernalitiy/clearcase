@@ -64,7 +64,11 @@ with sync_playwright() as p:
     page.wait_for_timeout(2200)  # auto-read starts after 900 ms; let a few sentences go
     pos_before = page.evaluate("reader.pos")
     check(page.evaluate("reader.playing") and pos_before > 0, f"auto read-aloud is running (sentence {pos_before})")
+    check(page.get_attribute("#mascot", "data-state") == "speaking", "Bridgey is speaking while reading")
+    check(page.is_visible("#mascot-bubble") and len(page.inner_text("#mascot-bubble")) > 3, "caption bubble shows the sentence")
     page.keyboard.press("q")
+    check(page.get_attribute("#mascot", "data-state") == "paused", "Bridgey is paused after Q")
+    check(not page.is_visible("#mascot-bubble"), "caption bubble hides when paused")
     check(page.evaluate("document.querySelector('#ask-dialog').open"), "Q opens the ask dialog")
     check(not page.evaluate("reader.playing"), "Q stops reading")
     spoken_count = page.evaluate("__spoken.length")
