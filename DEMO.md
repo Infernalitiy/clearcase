@@ -9,16 +9,16 @@
 **Say:** "This is a hospital bill. If you're blind, it's unreadable. If you're Deaf, it tells you to call a number. If you have a learning disability or chronic fatigue, it's a wall of jargon. CareBridge turns any medical paper into the format each disabled patient can actually use."
 
 ### 0:15–0:30: Profile
-**Do:** On the needs screen, tick **Blind or low vision**. Point out that high contrast, large text and auto-read switch on. Click **Save and continue**.
-**Say:** "You tell it once how you need information. It remembers on your device."
+**Do:** On the needs screen, tick **Blind or low vision**. Point out that high contrast, large text and auto-read switch on. Set **Voice style → Warm and gentle (mom-like)** and click **Preview voice**. Click **Save and continue**.
+**Say:** "You tell it once how you need information, even what kind of voice you want. It remembers on your device."
 
 ### 0:30–0:40: Load a document
 **Do:** Click **Try a sample document → Hospital bill** (or upload a photo if you have a key and time).
 **Say:** "I'll use a fictional bill. It reads the document and pulls out what matters."
 
 ### 0:40–1:00: Read aloud, then interrupt
-**Do:** Let it read the intro and start the "Amount you owe" card. Point to the highlighted sentence. **Mid-sentence, press Q.**
-**Say:** "It reads one sentence at a time. And if I'm confused, I can interrupt at any moment." *(Audio stops instantly.)*
+**Do:** Let it read the intro and start the "Amount you owe" card. Point to Bridgey in the top right and the caption bubble, then the highlighted sentence. **Mid-sentence, press Q.**
+**Say:** "Pick the Warm and gentle voice and Bridgey reads it to you, with live captions in the bubble. And if I'm confused, I can interrupt at any moment." *(Audio stops instantly, and Bridgey shows paused.)*
 
 ### 1:00–1:20: Ask, get a simple answer with its source
 **Do:** Tap **What does this mean?** (or speak "Why do I owe this?" with the mic).

@@ -20,7 +20,7 @@ Pick one or more needs on first launch (saved on your device only). The same doc
 
 | Need | What changes |
 |---|---|
-| **Blind / low vision** (`blind_low_vision`) | Audio-first: starts reading aloud automatically, one sentence at a time, with the current sentence highlighted. Large, high-contrast text by default. Semantic HTML and live regions so screen readers work out of the box. |
+| **Blind / low vision** (`blind_low_vision`) | Audio-first: starts reading aloud automatically, one sentence at a time, with the current sentence highlighted. Choose a **voice style** (e.g. *Warm and gentle (mom-like)*, *Calm and steady*). Large, high-contrast text by default. Semantic HTML and live regions so screen readers work out of the box. |
 | **Deaf / hard of hearing** (`deaf_hoh`) | Text only, no audio dependence. Instead of "call this number", every contact has **Write a message for me**, which drafts an email asking for a written reply (with an accommodation request), plus Copy and Open-in-email buttons. Phone numbers mention relay services (711). |
 | **Cognitive / learning** (`cognitive_learning`) | Very short, simple sentences. **One card at a time** with big Next/Back buttons. A **Make it even simpler** button on every card. Optional dyslexia-friendly font and spacing. |
 | **Fatigue / motor** (`fatigue_motor`) | The "what to do" **checklist comes first**, with big tap-to-check buttons. **One-tap questions** ("What do I need to do?", "Say it simpler", "Write a message for me") so nothing needs typing. Larger touch targets everywhere. |
@@ -45,6 +45,9 @@ A large **I'm confused / Ask** button is always visible, also on the **Q** key. 
 - Document text is treated as data, never as instructions (prompt-injection resistant prompts).
 
 ### Also included
+- **Voice styles:** *Device default*, *Warm and gentle (mom-like)*, *Calm and steady*, *Bright and cheerful*, *Clear and slow*, with a Preview button. Each style picks the best matching voice already on your device and sets the pitch and speed. These are **not** real or cloned voices, and they sound different on different computers and browsers.
+- **Bridgey, the helper character:** an original mascot in the top right who "does the talking". Its mouth moves while reading, and it shows when it's paused, listening or thinking. Its speech bubble shows the sentence being read, like live captions. Bridgey is decorative (screen readers skip it), stops moving when reduced motion is on, and can be switched off in settings.
+- **iOS-style interface:** frosted-glass cards, switches and a segmented control. The colours are adjusted to meet WCAG AA contrast, and the glass turns off in high-contrast mode and when the device asks for reduced transparency.
 - PDF upload (first 3 pages, including scanned PDFs), JPG and PNG.
 - Caregiver mode: answers address the person helping the patient.
 - Print a large-print copy, including all original quotes.
@@ -117,7 +120,7 @@ python tests/ui_smoke.py http://localhost:5000 --ai   # plus real upload and que
 
 - **We have not yet tested CareBridge with disabled users.** Every design choice here is based on published accessibility guidance and our own reasoning, not on user research. That is the most important next step.
 - AI can misread documents, especially blurry photos or handwriting. That's why every card has *Show original* and key facts are flagged for double-checking, but errors are still possible.
-- Tested in Chromium. Speech voices and voice input vary by browser and OS. Voice input does not work in Firefox. We have not done full testing with NVDA, JAWS or VoiceOver yet.
+- Tested in Chromium. Speech voices, voice styles and voice input vary by browser and OS. Some browser voices ignore pitch, so two styles may sound alike on some devices. Voice input does not work in Firefox. We have not done full testing with NVDA, JAWS or VoiceOver yet.
 - English only.
 - The dyslexia font uses OpenDyslexic if it's installed on your device, and falls back to a rounded font with wider spacing otherwise.
 - PDFs: only the first 3 pages are read.
