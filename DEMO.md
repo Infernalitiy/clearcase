@@ -1,12 +1,12 @@
-# CareBridge: 2-minute demo script
+# ClearCase: 2-minute demo script
 
-**Setup before recording:** Chrome, app open at the home screen, volume up, sound recorded from the computer (CareBridge's voice must be audible). Profile cleared (DevTools → Application → Local Storage → delete `carebridge.settings`) so the needs screen shows. Zoom the browser to 125% so text is readable on video.
+**Setup before recording:** Chrome, app open at the home screen, volume up, sound recorded from the computer (ClearCase's voice must be audible). Profile cleared (DevTools → Application → Local Storage → delete `clearcase.settings`) so the needs screen shows. Zoom the browser to 125% so text is readable on video.
 
 ---
 
 ### 0:00–0:15: The problem
 **Show:** `samples/bill.png` full screen.
-**Say:** "This is a hospital bill. If you're blind, it's unreadable. If you're Deaf, it tells you to call a number. If you have a learning disability or chronic fatigue, it's a wall of jargon. CareBridge turns any medical paper into the format each disabled patient can actually use."
+**Say:** "This is a hospital bill. If you're blind, it's unreadable. If you're Deaf, it tells you to call a number. If you have a learning disability or chronic fatigue, it's a wall of jargon. ClearCase turns any medical paper into the format each disabled patient can actually use."
 
 ### 0:15–0:30: Profile
 **Do:** On the needs screen, tick **Blind or low vision**. Point out that high contrast, large text and auto-read switch on. Set **Voice → Female** (or Male) and click **Preview voice**. Click **Save and continue**.
@@ -38,7 +38,7 @@
 **Do:** Click **Next** once, then on the contacts card click **Write a message for me** (skip if no key).
 
 ### 1:52–2:00: Why not a general chatbot?
-**Say:** "Why not just use a chatbot? CareBridge remembers your accessibility profile, gives consistent accessible output, shows the source text so you can verify it, lets you interrupt mid-explanation and resume, and works with screen readers out of the box. CareBridge."
+**Say:** "Why not just use a chatbot? ClearCase remembers your accessibility profile, gives consistent accessible output, shows the source text so you can verify it, lets you interrupt mid-explanation and resume, and works with screen readers out of the box. ClearCase."
 
 ---
 

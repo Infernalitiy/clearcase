@@ -60,7 +60,7 @@ with sync_playwright() as p:
     # --- Blind / low vision: auto read, interrupt with Q, resume on same sentence
     set_profile(page, ["blind_low_vision"], voice="eleven:male")
     check(page.evaluate("[...document.querySelectorAll('#voice option')].map(o => o.textContent).join()") == "Female,Male", "voice menu is only Female and Male (natural)")
-    check(page.evaluate("JSON.parse(localStorage.getItem('carebridge.settings')).voice") == "eleven:male", "voice choice is saved")
+    check(page.evaluate("JSON.parse(localStorage.getItem('clearcase.settings')).voice") == "eleven:male", "voice choice is saved")
     check(page.evaluate("makeUtterance('hi').pitch") < 1, "male backup device voice keeps a male (lower) pitch")
     check(page.evaluate("document.documentElement.classList.contains('high-contrast')"), "blind profile turns on high contrast")
     page.click("[data-sample=bill]")

@@ -1,6 +1,6 @@
-# CareBridge: Devpost draft
+# ClearCase: Devpost draft
 
-**Tagline:** CareBridge turns any medical paper into the format each disabled patient can actually use.
+**Tagline:** ClearCase turns any medical paper into the format each disabled patient can actually use.
 
 ## Inspiration
 
@@ -10,7 +10,7 @@ We realized the *information* in the document isn't the problem. The *format* is
 
 ## What it does
 
-You take a photo of one medical document (a bill, an insurance denial, discharge instructions) or upload a PDF. CareBridge extracts what matters (what you owe, deadlines, medicines, what to do next, who to contact) and presents it based on the needs you chose:
+You take a photo of one medical document (a bill, an insurance denial, discharge instructions) or upload a PDF. ClearCase extracts what matters (what you owe, deadlines, medicines, what to do next, who to contact) and presents it based on the needs you chose:
 
 - **Blind / low vision:** reads aloud automatically, one sentence at a time, with large high-contrast text and full screen reader support.
 - **Deaf / hard of hearing:** text only. Instead of "call this number," it drafts a message asking for a written reply, including an accommodation request.
@@ -21,9 +21,9 @@ You take a photo of one medical document (a bill, an insurance denial, discharge
 
 **The key feature is interrupt-and-ask.** A big "I'm confused / Ask" button (or the Q key) stops the read-aloud instantly and remembers the exact sentence. You ask by typing, by voice, or with one tap ("What does this mean?", "Say it simpler"). You get an answer **with the exact quote from your document**, and a Continue button picks up on the same sentence.
 
-**Built for trust:** every card has "Show original" with the exact source text. Amounts, dates and medicines are flagged "Double-check this with a person." If the document doesn't say, CareBridge says so instead of guessing. Medicine decisions go to a doctor or pharmacist. Emergency-related documents show "If this is an emergency, call 911" first.
+**Built for trust:** every card has "Show original" with the exact source text. Amounts, dates and medicines are flagged "Double-check this with a person." If the document doesn't say, ClearCase says so instead of guessing. Medicine decisions go to a doctor or pharmacist. Emergency-related documents show "If this is an emergency, call 911" first.
 
-**Why not just use a general chatbot?** CareBridge remembers your accessibility profile, gives consistent accessible output every time, shows the source text so you can verify it, lets you interrupt mid-explanation and resume, and works with screen readers out of the box.
+**Why not just use a general chatbot?** ClearCase remembers your accessibility profile, gives consistent accessible output every time, shows the source text so you can verify it, lets you interrupt mid-explanation and resume, and works with screen readers out of the box.
 
 ## How we built it
 
@@ -59,7 +59,7 @@ You take a photo of one medical document (a bill, an insurance denial, discharge
 - Grounding and showing sources matter as much as summarizing, especially for money and medicine.
 - Simple, standard web tech (semantic HTML, native dialog, live regions) gets you very far with assistive technology.
 
-## What's next for CareBridge
+## What's next for ClearCase
 
 - **Usability testing with disabled people.** We have not done this yet, and it is our most important next step. Each profile needs to be tested by people who have that disability, ideally with disability organisations.
 - Full testing with NVDA, JAWS, VoiceOver and TalkBack, and a WCAG 2.2 AA audit.

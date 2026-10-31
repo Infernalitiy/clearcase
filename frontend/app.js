@@ -1,10 +1,10 @@
-/* CareBridge frontend. Plain JavaScript, no build step.
+/* ClearCase frontend. Plain JavaScript, no build step.
  * The document lives only in this page's memory. Settings live in localStorage. */
 "use strict";
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
-const SETTINGS_KEY = "carebridge.settings";
+const SETTINGS_KEY = "clearcase.settings";
 const NOT_IN_DOC = "This document doesn't say. Ask your insurer or provider.";
 const DOC_TYPE_NAMES = {
   bill: "a medical bill",
@@ -93,7 +93,8 @@ const mascot = {
 function loadSettings() {
   const defaults = { needs: [], textSize: "normal", contrast: false, dyslexia: false, autoRead: false, caregiver: false, rate: "1", voice: "eleven:female", showMascot: true, saved: false };
   try {
-    const s = Object.assign(defaults, JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}"));
+    const saved = localStorage.getItem(SETTINGS_KEY) || localStorage.getItem("carebridge.settings"); // app was renamed
+    const s = Object.assign(defaults, JSON.parse(saved || "{}"));
     // Older saved choices map to the natural Female or Male voice.
     s.voice = /male$/.test(s.voice) && !/female$/.test(s.voice) || s.voice === "calm" ? "eleven:male" : "eleven:female";
     return s;
@@ -247,7 +248,7 @@ async function api(url, options = {}, timeoutMs = 120000) {
     return data;
   } catch (e) {
     if (e.name === "AbortError") throw new Error("This is taking too long. Please try again.");
-    if (e instanceof TypeError) throw new Error("Can't reach CareBridge. Check your connection and try again.");
+    if (e instanceof TypeError) throw new Error("Can't reach ClearCase. Check your connection and try again.");
     throw e;
   } finally {
     clearTimeout(timer);

@@ -32,7 +32,7 @@ model = sys.argv[1] if len(sys.argv) > 1 else os.environ.get("BEDROCK_MODEL_ID",
 rt = boto3.client("bedrock-runtime", region_name=REGION, config=cfg)
 
 print("\n== Text test with", model, "==")
-r = rt.converse(modelId=model, messages=[{"role": "user", "content": [{"text": "Reply with exactly: CareBridge OK"}]}],
+r = rt.converse(modelId=model, messages=[{"role": "user", "content": [{"text": "Reply with exactly: ClearCase OK"}]}],
                 inferenceConfig={"maxTokens": 20})
 print(" ", r["output"]["message"]["content"][0]["text"])
 

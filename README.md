@@ -1,8 +1,8 @@
-# CareBridge
+# ClearCase
 
-**CareBridge turns any medical paper into the format each disabled patient can actually use.**
+**ClearCase turns any medical paper into the format each disabled patient can actually use.**
 
-Take a photo of a hospital bill, an insurance denial, or discharge instructions. CareBridge reads it, pulls out what matters (what you owe, deadlines, medicines, what to do next, who to contact) and presents it in the way that works for *you*: read aloud, text only, one simple step at a time, or a low-effort checklist. At any moment you can stop it and ask a question, and it answers only from your document, showing the exact line it used.
+Take a photo of a hospital bill, an insurance denial, or discharge instructions. ClearCase reads it, pulls out what matters (what you owe, deadlines, medicines, what to do next, who to contact) and presents it in the way that works for *you*: read aloud, text only, one simple step at a time, or a low-effort checklist. At any moment you can stop it and ask a question, and it answers only from your document, showing the exact line it used.
 
 > This tool helps you understand paperwork. It is not medical or legal advice. Confirm important details with your provider or insurer.
 
@@ -38,14 +38,14 @@ A large **I'm confused / Ask** button is always visible, also on the **Q** key. 
 - **Show original** on every card reveals the exact text copied from the document.
 - Amounts, dates, deadlines and medicines are always marked **"Double-check this with a person"**.
 - The server checks that every quoted answer actually appears in the document; if not, the UI says so.
-- If the document doesn't answer a question, CareBridge says: *"This document doesn't say. Ask your insurer or provider."* It does not guess.
+- If the document doesn't answer a question, ClearCase says: *"This document doesn't say. Ask your insurer or provider."* It does not guess.
 - Medical decisions (e.g. "should I stop this medicine?") are referred to a doctor or pharmacist.
 - If the photo is unreadable it says *"I couldn't read this clearly, please try a clearer photo."*
 - If the document is about urgent symptoms, *"If this is an emergency, call 911"* is shown, and read first.
 - Document text is treated as data, never as instructions (prompt-injection resistant prompts).
 
 ### Also included
-- **Female or male voice**, with a Preview button that shows which voice is in use. CareBridge picks the most natural matching voice the browser offers: Edge's neural "Online (Natural)" voices first, then Google's online voices, then local voices. **For the most natural, human-sounding voices, use Microsoft Edge.** Chrome on Windows offers fewer natural voices. If there isn't one, it uses the default voice with a higher or lower pitch. Voices sound different on different computers and browsers.
+- **Female or male voice**, with a Preview button that shows which voice is in use. ClearCase picks the most natural matching voice the browser offers: Edge's neural "Online (Natural)" voices first, then Google's online voices, then local voices. **For the most natural, human-sounding voices, use Microsoft Edge.** Chrome on Windows offers fewer natural voices. If there isn't one, it uses the default voice with a higher or lower pitch. Voices sound different on different computers and browsers.
 - **Bridgey, the helper character:** an original mascot in the top right who "does the talking". Its mouth moves while reading, and it shows when it's paused, listening or thinking. Its speech bubble shows the sentence being read, like live captions. Bridgey is decorative (screen readers skip it), stops moving when reduced motion is on, and can be switched off in settings.
 - **iOS-style interface:** frosted-glass cards, switches and a segmented control. The colours are adjusted to meet WCAG AA contrast, and the glass turns off in high-contrast mode and when the device asks for reduced transparency.
 - PDF upload (first 3 pages, including scanned PDFs), JPG and PNG.
@@ -75,7 +75,7 @@ AWS_BEARER_TOKEN_BEDROCK=your-bedrock-api-key
 
 The app uses Claude via the Amazon Bedrock Converse API in `us-east-1`. Without a key, a few answers still work offline ("Say that again", "Say it simpler", "What do I need to do?" come from the cached document).
 
-**Optional natural voices (ElevenLabs):** add `ELEVENLABS_API_KEY` to `.env` (and optionally `ELEVENLABS_VOICE_FEMALE` / `ELEVENLABS_VOICE_MALE` voice IDs) and restart. A *Female* / *Male* voice choice then appears in settings. Free ElevenLabs accounts can't use Voice Library voices through the API, so if a chosen voice is refused, CareBridge uses ElevenLabs' default voices Matilda and Brian instead. The key stays on the server. Only the sentence being read is sent to ElevenLabs, one sentence at a time, and nothing is stored. If ElevenLabs fails or isn't set up, CareBridge reads with the device's own voice as a backup.
+**Optional natural voices (ElevenLabs):** add `ELEVENLABS_API_KEY` to `.env` (and optionally `ELEVENLABS_VOICE_FEMALE` / `ELEVENLABS_VOICE_MALE` voice IDs) and restart. A *Female* / *Male* voice choice then appears in settings. Free ElevenLabs accounts can't use Voice Library voices through the API, so if a chosen voice is refused, ClearCase uses ElevenLabs' default voices Matilda and Brian instead. The key stays on the server. Only the sentence being read is sent to ElevenLabs, one sentence at a time, and nothing is stored. If ElevenLabs fails or isn't set up, ClearCase reads with the device's own voice as a backup.
 
 Optional: `PORT=5050 python backend/app.py` to use another port, `python backend/test_bedrock.py` to check your Bedrock access.
 
@@ -114,13 +114,13 @@ python tests/ui_smoke.py http://localhost:5000 --ai   # plus real upload and que
 
 ## Privacy and safety
 
-- Documents are sent to the AI service (Amazon Bedrock) to be read. **CareBridge stores nothing**: no database, no files written, no document contents logged. The extracted document lives only in your browser tab.
+- Documents are sent to the AI service (Amazon Bedrock) to be read. **ClearCase stores nothing**: no database, no files written, no document contents logged. The extracted document lives only in your browser tab.
 - Settings are stored in your browser's `localStorage` only.
 - The API key is read from the environment and is never logged or sent to the browser.
 
 ## Honest limitations
 
-- **We have not yet tested CareBridge with disabled users.** Every design choice here is based on published accessibility guidance and our own reasoning, not on user research. That is the most important next step.
+- **We have not yet tested ClearCase with disabled users.** Every design choice here is based on published accessibility guidance and our own reasoning, not on user research. That is the most important next step.
 - AI can misread documents, especially blurry photos or handwriting. That's why every card has *Show original* and key facts are flagged for double-checking, but errors are still possible.
 - Tested in Chromium. Speech voices and voice input vary by browser and OS. On a device with only one English voice, which ignores pitch, the female and male choices may sound alike. Voice input does not work in Firefox. We have not done full testing with NVDA, JAWS or VoiceOver yet.
 - English only.
