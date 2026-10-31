@@ -1,0 +1,164 @@
+"""Headless UI smoke test (uses sample documents, no API key needed for most checks).
+
+  python -m playwright install chromium
+  python tests/ui_smoke.py [base_url]
+"""
+import sys
+
+from playwright.sync_api import sync_playwright
+
+BASE = sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:5000"
+
+# Fake speech engine: each utterance "speaks" for 200 ms, cancel() stops it.
+FAKE_SPEECH = """
+window.__spoken = [];
+const synth = { _t: null, _q: [],
+  speak(u) { window.__spoken.push(u.text); this._q.push(u); if (!this._t) this._next(); },
+  _next() { const u = this._q.shift(); if (!u) { this._t = null; return; }
+    this._t = setTimeout(() => { this._t = null; u.onend && u.onend({}); this._next(); }, 200); },
+  cancel() { clearTimeout(this._t); this._t = null; this._q = []; },
+  getVoices() { return []; }, pause() {}, resume() {} };
+Object.defineProperty(window, 'speechSynthesis', { value: synth, configurable: true });
+if (!window.SpeechSynthesisUtterance) window.SpeechSynthesisUtterance = function (t) { this.text = t; };
+"""
+
+failures = []
+
+
+def check(cond, msg):
+    print(("PASS " if cond else "FAIL ") + msg)
+    if not cond:
+        failures.append(msg)
+
+
+def set_profile(page, needs):
+    page.goto(BASE)
+    page.evaluate("localStorage.clear()")
+    page.reload()
+    check(page.is_visible("#screen-settings"), "first visit shows the needs screen")
+    for n in needs:
+        page.check(f"input[name=needs][value={n}]")
+    page.click("#settings-form button[type=submit]")
+    check(page.is_visible("#screen-home"), f"saved profile {needs} and reached home")
+
+
+with sync_playwright() as p:
+    browser = p.chromium.launch()
+    ctx = browser.new_context()
+    ctx.add_init_script(FAKE_SPEECH)
+    page = ctx.new_page()
+    errors = []
+    page.on("pageerror", lambda e: errors.append(str(e)))
+    page.on("console", lambda m: m.type == "error" and errors.append(m.text))
+
+    # --- Blind / low vision: auto read, interrupt with Q, resume on same sentence
+    set_profile(page, ["blind_low_vision"])
+    check(page.evaluate("document.documentElement.classList.contains('high-contrast')"), "blind profile turns on high contrast")
+    page.click("[data-sample=bill]")
+    page.wait_for_selector("#screen-result:not([hidden])")
+    check("Hospital" in page.inner_text("#doc-title") or len(page.inner_text("#doc-title")) > 3, "result title shown")
+    page.wait_for_timeout(2200)  # auto-read starts after 900 ms; let a few sentences go
+    pos_before = page.evaluate("reader.pos")
+    check(page.evaluate("reader.playing") and pos_before > 0, f"auto read-aloud is running (sentence {pos_before})")
+    page.keyboard.press("q")
+    check(page.evaluate("document.querySelector('#ask-dialog').open"), "Q opens the ask dialog")
+    check(not page.evaluate("reader.playing"), "Q stops reading")
+    spoken_count = page.evaluate("__spoken.length")
+    page.wait_for_timeout(600)
+    check(page.evaluate("__spoken.length") == spoken_count, "nothing more is spoken after Q")
+    page.click("#ask-dialog [data-q='Say that again']")
+    page.wait_for_selector("#answer-box:not([hidden])")
+    check(len(page.inner_text("#answer-text")) > 5, "'Say that again' shows an answer")
+    expected = page.evaluate("state.segments[reader.pos].text")
+    page.click("#continue-btn")
+    page.wait_for_timeout(100)
+    check(not page.evaluate("document.querySelector('#ask-dialog').open"), "Continue closes the dialog")
+    check(page.evaluate("reader.playing"), "Continue resumes reading")
+    check(page.evaluate("__spoken[__spoken.length - 1]") == expected, f"resumed on the same sentence: {expected[:50]!r}")
+    page.click("#stop-btn")
+    check(page.inner_text("#read-btn") == "Continue reading", "Stop shows 'Continue reading'")
+    page.keyboard.press("q")
+    page.keyboard.press("Escape")
+    check(not page.evaluate("document.querySelector('#ask-dialog').open"), "Escape closes the dialog")
+    check(page.locator("details.original").count() > 0, "cards have Show original")
+    page.locator("details.original summary").first.click()
+    check("$482.17" in page.inner_text("#cards") , "amount $482.17 visible")
+    check(page.locator(".verify").first.is_visible(), "'Double-check this with a person' shown")
+
+    # --- Discharge: emergency banner first
+    page.click("#restart-btn")
+    page.click("[data-sample=discharge]")
+    page.wait_for_selector("#screen-result:not([hidden])")
+    check("call 911" in page.inner_text("#banners"), "emergency banner shown for discharge")
+    check(page.evaluate("state.segments[0].text").startswith("If this is an emergency"), "emergency line is read first")
+
+    # --- Cognitive: one card at a time
+    set_profile(page, ["cognitive_learning"])
+    page.click("[data-sample=denial]")
+    page.wait_for_selector("#screen-result:not([hidden])")
+    visible = page.evaluate("[...document.querySelectorAll('#cards .card')].filter(c => !c.hidden).length")
+    check(visible == 1, "cognitive profile shows one card at a time")
+    check(page.is_visible("#pager"), "Next/Back pager visible")
+    page.click("#next-btn")
+    check("Card 2 of" in page.inner_text("#pager-pos"), "Next moves to card 2")
+    check(page.locator("text=Make it even simpler").first.is_visible(), "'Make it even simpler' button shown")
+
+    # --- Deaf / HoH: no audio, write instead of call
+    set_profile(page, ["deaf_hoh"])
+    page.click("[data-sample=bill]")
+    page.wait_for_selector("#screen-result:not([hidden])")
+    check(not page.is_visible("#read-btn"), "deaf profile hides Read aloud")
+    check(page.locator("text=Write a message for me").count() > 0, "deaf profile offers 'Write a message for me'")
+    check(page.locator("a[href^='tel:']").count() == 0, "deaf profile shows no call buttons")
+
+    # --- Fatigue: checklist first, one-tap questions
+    set_profile(page, ["fatigue_motor"])
+    page.click("[data-sample=bill]")
+    page.wait_for_selector("#screen-result:not([hidden])")
+    check(page.is_visible("#quick-questions"), "fatigue profile shows one-tap questions")
+    check(page.evaluate("state.cards[1].kind") == "steps", "fatigue profile puts the checklist first")
+    page.locator(".check").first.click()
+    check(page.locator(".check").first.get_attribute("aria-pressed") == "true", "checklist item toggles")
+
+    # --- Keyboard only: Tab reaches the sample buttons and Enter loads a document
+    page.click("#restart-btn")
+    page.evaluate("document.activeElement.blur()")
+    for _ in range(40):
+        page.keyboard.press("Tab")
+        if page.evaluate("document.activeElement.dataset.sample") == "bill":
+            break
+    check(page.evaluate("document.activeElement.dataset.sample") == "bill", "Tab reaches the sample buttons")
+    page.keyboard.press("Enter")
+    page.wait_for_selector("#screen-result:not([hidden])")
+    check(True, "Enter on a sample button opens the document")
+
+    if "--ai" in sys.argv:  # these need the Bedrock key on the server
+        page.keyboard.press("q")
+        page.click("#ask-dialog [data-q='What does this mean?']")
+        page.wait_for_function("document.querySelector('#answer-text').textContent !== 'Thinking...'", timeout=60000)
+        check(len(page.inner_text("#answer-text")) > 10, "AI answer: " + page.inner_text("#answer-text")[:80])
+        check(page.is_visible("#answer-quote"), "source quote shown: " + page.inner_text("#answer-quote")[:60])
+        page.click("#continue-btn")
+        page.locator("text=Write a message for me").first.click()
+        page.wait_for_function("!/^Writing/.test(document.querySelector('#answer-text').textContent)", timeout=60000)
+        check("Copy message" in page.inner_text("#answer-actions"), "drafted message with Copy button")
+        page.keyboard.press("Escape")
+        page.click("#restart-btn")
+        page.set_input_files("#file", "samples/denial.png")
+        page.click("#analyze-btn")
+        page.wait_for_selector("#screen-result:not([hidden])", timeout=90000)
+        check(page.locator("#cards .card").count() > 3, "real upload produces cards")
+        from PIL import Image, ImageFilter
+        Image.open("samples/bill.png").resize((160, 200)).filter(ImageFilter.GaussianBlur(4)).save("tests/blurry.png")
+        page.click("#restart-btn")
+        page.set_input_files("#file", "tests/blurry.png")
+        page.click("#analyze-btn")
+        page.wait_for_selector("#screen-result:not([hidden])", timeout=90000)
+        check("couldn't read this clearly" in page.inner_text("#banners"), "blurry photo shows the low-confidence message")
+
+    page.screenshot(path="tests/screenshot.png", full_page=True)
+    check(not errors, f"no JavaScript errors {errors}")
+    browser.close()
+
+print(f"\n{len(failures)} failure(s)" if failures else "\nALL PASSED")
+sys.exit(1 if failures else 0)

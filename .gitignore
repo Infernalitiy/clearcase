@@ -1,0 +1,9 @@
+.env
+__pycache__/
+*.pyc
+*.zip
+node_modules/
+.venv/
+venv/
+tests/screenshot.png
+tests/blurry.png
