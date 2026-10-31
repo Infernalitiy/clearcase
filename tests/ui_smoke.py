@@ -39,6 +39,7 @@ def set_profile(page, needs, voice=None):
     for n in needs:
         page.check(f"input[name=needs][value={n}]")
     if voice:
+        page.wait_for_selector(f"#voice option[value='{voice}']", state="attached")
         page.select_option("#voice", voice)
     page.click("#settings-form button[type=submit]")
     check(page.is_visible("#screen-home"), f"saved profile {needs} and reached home")
@@ -48,16 +49,19 @@ with sync_playwright() as p:
     browser = p.chromium.launch()
     ctx = browser.new_context()
     ctx.add_init_script(FAKE_SPEECH)
+    ctx.route("**/api/config", lambda r: r.fulfill(json={"natural_voice": True, "natural_voices": [
+        {"key": "female", "label": "Female"}, {"key": "male", "label": "Male"}]}))
+    ctx.route("**/api/tts", lambda r: r.fulfill(status=503, json={"error": "off in tests", "code": "no_tts"}))
     page = ctx.new_page()
     errors = []
     page.on("pageerror", lambda e: errors.append(str(e)))
     page.on("console", lambda m: m.type == "error" and errors.append(m.text))
 
     # --- Blind / low vision: auto read, interrupt with Q, resume on same sentence
-    set_profile(page, ["blind_low_vision"], voice="male")
-    check(page.evaluate("[...document.querySelectorAll('#voice option')].map(o => o.value).filter(v => !v.startsWith('eleven:')).join()") == "female,male", "device voice choices are Female and Male")
-    check(page.evaluate("JSON.parse(localStorage.getItem('carebridge.settings')).voice") == "male", "voice choice is saved")
-    check(page.evaluate("makeUtterance('hi').pitch") < 1, "male voice without a male device voice uses a lower pitch")
+    set_profile(page, ["blind_low_vision"], voice="eleven:male")
+    check(page.evaluate("[...document.querySelectorAll('#voice option')].map(o => o.textContent).join()") == "Female,Male", "voice menu is only Female and Male (natural)")
+    check(page.evaluate("JSON.parse(localStorage.getItem('carebridge.settings')).voice") == "eleven:male", "voice choice is saved")
+    check(page.evaluate("makeUtterance('hi').pitch") < 1, "male backup device voice keeps a male (lower) pitch")
     check(page.evaluate("document.documentElement.classList.contains('high-contrast')"), "blind profile turns on high contrast")
     page.click("[data-sample=bill]")
     page.wait_for_selector("#screen-result:not([hidden])")
@@ -160,16 +164,13 @@ with sync_playwright() as p:
             route.fulfill(status=502, json={"error": "fake failure", "code": "tts_error"})
         else:
             route.fulfill(status=200, body=clip, headers={"Content-Type": "audio/wav"})
-    page.route("**/api/config", lambda r: r.fulfill(json={"natural_voice": True, "natural_voices": [
-        {"key": "mommy", "label": "Mommy (natural voice)"}, {"key": "male", "label": "Male (natural voice)"}]}))
     page.route("**/api/tts", fake_tts)
     page.goto(BASE)
     page.evaluate("localStorage.clear()")
     page.reload()
-    page.wait_for_selector("#voice option[value='eleven:mommy']", state="attached")
-    check(page.locator("#voice option[value='eleven:male']").count() == 1, "Mommy and Male natural voices offered")
+    page.wait_for_selector("#voice option[value='eleven:female']", state="attached")
     page.uncheck("input[name=autoRead]")
-    page.select_option("#voice", "eleven:mommy")
+    page.select_option("#voice", "eleven:female")
     page.click("#settings-form button[type=submit]")
     page.click("[data-sample=bill]")
     page.wait_for_selector("#screen-result:not([hidden])")
@@ -191,7 +192,6 @@ with sync_playwright() as p:
     page.wait_for_timeout(800)
     check(page.evaluate("natural.failed") and page.evaluate("reader.playing"), "if ElevenLabs fails, reading continues with the device voice")
     errors[:] = [e for e in errors if "status of 502" not in e]  # the 502s above were faked on purpose
-    page.unroute("**/api/config")
     page.unroute("**/api/tts")
     page.click("#stop-btn")
 
@@ -220,6 +220,7 @@ with sync_playwright() as p:
         check("couldn't read this clearly" in page.inner_text("#banners"), "blurry photo shows the low-confidence message")
 
     page.screenshot(path="tests/screenshot.png", full_page=True)
+    errors[:] = [e for e in errors if "status of 503" not in e]  # tests turn ElevenLabs off on purpose
     check(not errors, f"no JavaScript errors {errors}")
     browser.close()
 

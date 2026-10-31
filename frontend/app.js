@@ -91,11 +91,11 @@ const mascot = {
 
 // ---------------- Settings ----------------
 function loadSettings() {
-  const defaults = { needs: [], textSize: "normal", contrast: false, dyslexia: false, autoRead: false, caregiver: false, rate: "1", voice: "female", showMascot: true, saved: false };
+  const defaults = { needs: [], textSize: "normal", contrast: false, dyslexia: false, autoRead: false, caregiver: false, rate: "1", voice: "eleven:female", showMascot: true, saved: false };
   try {
     const s = Object.assign(defaults, JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}"));
-    if (s.voice === "natural") s.voice = "eleven:mommy";
-    if (!["female", "male"].includes(s.voice) && !/^eleven:/.test(s.voice)) s.voice = s.voice === "calm" ? "male" : "female"; // older saved styles
+    // Older saved choices map to the natural Female or Male voice.
+    s.voice = /male$/.test(s.voice) && !/female$/.test(s.voice) || s.voice === "calm" ? "eleven:male" : "eleven:female";
     return s;
   } catch (e) {
     return defaults;
@@ -157,20 +157,17 @@ function updateAudioSettings() {
 }
 $("#settings-form").addEventListener("change", updateAudioSettings);
 
-const VOICE_NOTE = "These are your device's built-in voices. For the most natural voices, open CareBridge in Microsoft Edge.";
 $("#preview-voice").addEventListener("click", () => {
   const f = $("#settings-form");
   stopAllSpeech();
   if (f.voice.value.startsWith("eleven:") && natural.available) {
-    $("#voice-note").textContent = "Using: a natural ElevenLabs voice. The text being read is sent to ElevenLabs to make the audio.";
     natural.play("Hi, I'm here to help you read your papers.", () => true, () => {}, () => {
-      $("#voice-note").textContent = "The natural voice isn't working right now. Check the ElevenLabs key and voice ID.";
+      $("#voice-note").textContent = "The natural voice isn't working right now, so the device voice will be used. Check the ElevenLabs key.";
     }, f.rate.value, f.voice.value.slice(7));
     return;
   }
   if (!("speechSynthesis" in window)) return announce("Read aloud isn't available in this browser.");
   const u = makeUtterance("Hi, I'm here to help you read your papers.", f.voice.value, f.rate.value);
-  $("#voice-note").textContent = `Using: ${u.voice ? u.voice.name : "your device's default voice"}. ` + VOICE_NOTE;
   speechSynthesis.speak(u);
 });
 
@@ -552,7 +549,8 @@ function pickVoice(styleKey) {
 }
 
 function makeUtterance(text, styleKey = state.settings.voice, speed = state.settings.rate) {
-  if (styleKey === "eleven:male") styleKey = "male"; // natural voice fallback keeps the same gender
+  // Device voices are only a backup for the natural voices; keep the same gender.
+  if (!VOICE_STYLES[styleKey]) styleKey = styleKey === "eleven:male" ? "male" : "female";
   const style = VOICE_STYLES[styleKey] || VOICE_STYLES.female;
   const u = new SpeechSynthesisUtterance(text);
   const v = pickVoice(styleKey);
@@ -568,7 +566,7 @@ const natural = {
   failed: false,
   audio: new Audio(),
   cache: new Map(), // "voice|sentence" -> Promise<blob URL>, kept in this tab's memory only
-  voice() { return state.settings.voice.slice(7); }, // "eleven:male" -> "male"
+  voice() { return state.settings.voice === "eleven:male" ? "male" : "female"; },
   url(text, voice = natural.voice()) {
     const key = `${voice}|${text}`;
     if (!natural.cache.has(key)) {
@@ -618,7 +616,8 @@ function stopAllSpeech() {
 fetch("/api/config").then((r) => r.json()).then((cfg) => {
   if (!cfg.natural_voice || !(cfg.natural_voices || []).length) return;
   natural.available = true;
-  $("#voice").prepend(...cfg.natural_voices.map((v) => el("option", { value: `eleven:${v.key}` }, v.label)));
+  $("#voice").replaceChildren(...cfg.natural_voices.map((v) => el("option", { value: `eleven:${v.key}` }, v.label)));
+  $("#voice-block").hidden = false;
   if ($(`#voice option[value="${state.settings.voice}"]`)) $("#voice").value = state.settings.voice;
 }).catch(() => {});
 

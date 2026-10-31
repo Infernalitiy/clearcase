@@ -381,8 +381,8 @@ ELEVEN_MODEL = os.environ.get("ELEVENLABS_MODEL_ID", "eleven_flash_v2_5")
 # Each slot: (label, env var with the chosen voice ID, ElevenLabs default voice used if that one can't be used).
 # Free ElevenLabs accounts can't use Voice Library voices through the API, so the defaults keep it working.
 ELEVEN_SLOTS = {
-    "mommy": ("Mommy (natural voice)", "ELEVENLABS_VOICE_MOMMY", "XrExE9yKIg1WjnnlVkGX"),  # default: Matilda, warm
-    "male": ("Male (natural voice)", "ELEVENLABS_VOICE_MALE", "nPczCjzI2devNBz1zQrb"),    # default: Brian, deep
+    "female": ("Female", "ELEVENLABS_VOICE_FEMALE", "XrExE9yKIg1WjnnlVkGX"),  # default: Matilda, warm
+    "male": ("Male", "ELEVENLABS_VOICE_MALE", "nPczCjzI2devNBz1zQrb"),        # default: Brian, deep
 }
 _blocked_voices = set()  # voice IDs ElevenLabs refused (e.g. paid plan needed); skipped until restart
 
@@ -393,7 +393,9 @@ def eleven_key():
 
 def eleven_voice_ids(slot):
     _label, env, default = ELEVEN_SLOTS[slot]
-    chosen = os.environ.get(env, "").strip() or (os.environ.get("ELEVENLABS_VOICE_ID", "").strip() if slot == "mommy" else "")
+    chosen = os.environ.get(env, "").strip()
+    if not chosen and slot == "female":  # older variable names
+        chosen = (os.environ.get("ELEVENLABS_VOICE_MOMMY") or os.environ.get("ELEVENLABS_VOICE_ID") or "").strip()
     ids = [v for v in (chosen, default) if re.fullmatch(r"[A-Za-z0-9]{10,40}", v or "")]
     return [v for i, v in enumerate(ids) if v not in ids[:i] and v not in _blocked_voices]
 
@@ -423,7 +425,7 @@ def tts():
         raise ApiError("The natural voice isn't set up on this server.", 503, "no_tts")
     body = request.get_json(silent=True) or {}
     text = str(body.get("text") or "").strip()
-    slot = body.get("voice") if body.get("voice") in ELEVEN_SLOTS else "mommy"
+    slot = body.get("voice") if body.get("voice") in ELEVEN_SLOTS else "female"
     if not text:
         raise ApiError("No text to read.", 400, "no_text")
     if len(text) > 1500:
