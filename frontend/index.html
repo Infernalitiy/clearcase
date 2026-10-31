@@ -30,21 +30,25 @@
         <fieldset>
           <legend>My needs (choose any)</legend>
           <label class="choice">
-            <input type="checkbox" name="needs" value="blind_low_vision">
-            <span><strong>Blind or low vision</strong><br><span class="hint">Reads aloud, large high-contrast text, works with screen readers.</span></span>
+            <input type="checkbox" name="needs" value="blind_low_vision" aria-describedby="desc-blind">
+            <span><strong>Blind or low vision</strong></span>
           </label>
+          <span id="desc-blind" class="sr-only">Reads aloud, large high-contrast text, works with screen readers.</span>
           <label class="choice">
-            <input type="checkbox" name="needs" value="deaf_hoh">
-            <span><strong>Deaf or hard of hearing</strong><br><span class="hint">Text only. Writes messages for you instead of "call this number".</span></span>
+            <input type="checkbox" name="needs" value="deaf_hoh" aria-describedby="desc-deaf">
+            <span><strong>Deaf or hard of hearing</strong></span>
           </label>
+          <span id="desc-deaf" class="sr-only">Text only. Writes messages for you instead of "call this number".</span>
           <label class="choice">
-            <input type="checkbox" name="needs" value="cognitive_learning">
-            <span><strong>Cognitive or learning disability</strong><br><span class="hint">Very short, simple steps. One card at a time.</span></span>
+            <input type="checkbox" name="needs" value="cognitive_learning" aria-describedby="desc-cognitive">
+            <span><strong>Cognitive or learning disability</strong></span>
           </label>
+          <span id="desc-cognitive" class="sr-only">Very short, simple steps. One card at a time.</span>
           <label class="choice">
-            <input type="checkbox" name="needs" value="fatigue_motor">
-            <span><strong>Low energy, fatigue, or limited movement</strong><br><span class="hint">A short checklist, big buttons, one-tap questions.</span></span>
+            <input type="checkbox" name="needs" value="fatigue_motor" aria-describedby="desc-fatigue">
+            <span><strong>Low energy, fatigue, or limited movement</strong></span>
           </label>
+          <span id="desc-fatigue" class="sr-only">A short checklist, big buttons, one-tap questions.</span>
         </fieldset>
 
         <fieldset>
@@ -107,14 +111,14 @@
         <h2>Your document</h2>
         <label for="file" class="field-label">Choose a photo, image or PDF (JPG, PNG or PDF)</label>
         <input type="file" id="file" name="file" accept="image/jpeg,image/png,application/pdf" aria-describedby="file-hint">
-        <p id="file-hint" class="hint">On a phone you can take a new photo. Lay the page flat in good light. For PDFs, the first 3 pages are read.</p>
+        <p id="file-hint" class="sr-only">On a phone you can take a new photo. Lay the page flat in good light. For PDFs, the first 3 pages are read.</p>
         <button type="submit" class="btn btn-primary btn-big" id="analyze-btn">Read my document</button>
         <p id="upload-error" class="error" role="alert" hidden></p>
       </form>
 
       <section class="panel" aria-labelledby="samples-title">
         <h2 id="samples-title">Try a sample document</h2>
-        <p class="hint">Made-up documents. These work without uploading anything.</p>
+        <p class="sr-only">Made-up documents. These work without uploading anything.</p>
         <div class="row">
           <button type="button" class="btn btn-secondary btn-big" data-sample="bill">Hospital bill</button>
           <button type="button" class="btn btn-secondary btn-big" data-sample="denial">Insurance denial</button>
@@ -128,7 +132,7 @@
       <div class="loading" role="status">
         <div class="spinner" aria-hidden="true"></div>
         <h1 id="loading-title" tabindex="-1">Reading your document...</h1>
-        <p>This usually takes 10 to 30 seconds.</p>
+        <p class="sr-only">This usually takes 10 to 30 seconds.</p>
       </div>
     </section>
 
@@ -136,12 +140,12 @@
     <section id="screen-result" class="screen" hidden aria-labelledby="doc-title">
       <div id="banners"></div>
       <h1 id="doc-title" tabindex="-1"></h1>
-      <p id="doc-meta" class="hint"></p>
+      <p id="doc-meta" class="sr-only"></p>
 
       <div class="toolbar" role="group" aria-label="Reading controls">
         <button type="button" id="read-btn" class="btn btn-primary btn-big" aria-describedby="read-pos">Read aloud</button>
         <button type="button" id="stop-btn" class="btn btn-secondary btn-big" hidden>Stop reading</button>
-        <span id="read-pos" class="hint"></span>
+        <span id="read-pos" class="sr-only"></span>
         <button type="button" id="print-btn" class="btn btn-secondary">Print large-print copy</button>
         <button type="button" id="restart-btn" class="btn btn-secondary">Start over with a new document</button>
       </div>
