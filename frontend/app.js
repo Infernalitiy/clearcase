@@ -5,6 +5,8 @@
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 const SETTINGS_KEY = "clearcase.settings";
+// Static demo (e.g. GitHub Pages): no server, so samples load from files and AI features use offline answers.
+const STATIC = location.hostname.endsWith("github.io");
 const NOT_IN_DOC = "This document doesn't say. Ask your insurer or provider.";
 const DOC_TYPE_NAMES = {
   bill: "a medical bill",
@@ -234,6 +236,11 @@ function goHome() {
 
 // ---------------- API ----------------
 async function api(url, options = {}, timeoutMs = 120000) {
+  if (STATIC && url.startsWith("/api/")) {
+    const err = new Error("This online demo works with the sample documents. To upload your own, run the full app (see the GitHub page).");
+    err.code = "no_api_key";
+    throw err;
+  }
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
@@ -270,7 +277,7 @@ $("#upload-form").addEventListener("submit", async (e) => {
 });
 
 $$("[data-sample]").forEach((btn) =>
-  btn.addEventListener("click", () => loadDocument(() => api(`/api/sample/${btn.dataset.sample}`))));
+  btn.addEventListener("click", () => loadDocument(() => api(STATIC ? `samples/${btn.dataset.sample}.json` : `/api/sample/${btn.dataset.sample}`))));
 
 function showUploadError(msg) {
   showScreen("home");
