@@ -91,9 +91,11 @@ const mascot = {
 
 // ---------------- Settings ----------------
 function loadSettings() {
-  const defaults = { needs: [], textSize: "normal", contrast: false, dyslexia: false, autoRead: false, caregiver: false, rate: "1", voice: "default", showMascot: true, saved: false };
+  const defaults = { needs: [], textSize: "normal", contrast: false, dyslexia: false, autoRead: false, caregiver: false, rate: "1", voice: "female", showMascot: true, saved: false };
   try {
-    return Object.assign(defaults, JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}"));
+    const s = Object.assign(defaults, JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}"));
+    if (s.voice !== "female" && s.voice !== "male") s.voice = s.voice === "calm" ? "male" : "female"; // older saved styles
+    return s;
   } catch (e) {
     return defaults;
   }
@@ -509,13 +511,13 @@ $("#prev-btn").addEventListener("click", () => userMoveTo(state.page - 1));
 $("#next-btn").addEventListener("click", () => userMoveTo(state.page + 1));
 
 // ---------------- Voice styles ----------------
-// Styles are built from the device's own voices plus pitch and rate. Names are tried in order.
+// Female or male, chosen from the device's own voices. Names are tried in order.
+// If the device has no matching voice, the default voice is used with a higher or lower pitch.
 const VOICE_STYLES = {
-  default: { names: [], pitch: 1, rate: 1 },
-  warm: { names: [/Microsoft (Aria|Jenny|Ava|Emma)/i, /Google US English/i, /Samantha/i, /Microsoft Zira/i, /Karen|Moira|Tessa/i, /\bFemale\b/i], pitch: 1.1, rate: 0.9 },
-  calm: { names: [/Microsoft (Guy|Andrew|Brian)/i, /Google UK English Male/i, /^Daniel/i, /Microsoft (David|Mark)/i, /^Alex$/i, /\bMale\b/i], pitch: 0.9, rate: 0.9 },
-  bright: { names: [/Microsoft (Jenny|Emma|Aria|Ava)/i, /Google US English/i, /Samantha/i, /Microsoft Zira/i, /Karen|Tessa/i, /\bFemale\b/i], pitch: 1.25, rate: 1.05 },
-  clear: { names: [/Microsoft (Aria|Jenny|Guy)/i, /Google US English/i, /Samantha/i, /Microsoft (Zira|David)/i], pitch: 1, rate: 0.75 },
+  female: { names: [/Microsoft (Aria|Jenny|Ava|Emma|Michelle|Zira)/i, /Google US English/i, /Google UK English Female/i,
+    /^(Samantha|Karen|Moira|Tessa|Fiona|Victoria|Allison|Susan)\b/i, /\bFemale\b/i], fallbackPitch: 1.15 },
+  male: { names: [/Microsoft (Guy|Andrew|Brian|Christopher|Eric|Roger|David|Mark)/i, /Google UK English Male/i,
+    /^(Daniel|Alex|Aaron|Tom)\b/i, /\bMale\b/i], fallbackPitch: 0.8 },
 };
 // Keep novelty voices (e.g. macOS "Zarvox", "Bad News") out of a medical app.
 const NOVELTY_VOICES = /Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Deranged|Good News|Hysterical|Jester|Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox/i;
@@ -524,7 +526,7 @@ function loadVoices() { voices = "speechSynthesis" in window ? speechSynthesis.g
 if ("speechSynthesis" in window) { loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
 
 function pickVoice(styleKey) {
-  const style = VOICE_STYLES[styleKey] || VOICE_STYLES.default;
+  const style = VOICE_STYLES[styleKey] || VOICE_STYLES.female;
   if (!voices.length) loadVoices();
   const usable = voices.filter((v) => !NOVELTY_VOICES.test(v.name));
   const english = usable.filter((v) => /^en[-_]US/i.test(v.lang)).concat(usable.filter((v) => /^en/i.test(v.lang) && !/^en[-_]US/i.test(v.lang)));
@@ -532,16 +534,15 @@ function pickVoice(styleKey) {
     const v = english.find((x) => re.test(x.name));
     if (v) return v;
   }
-  return null; // device default voice, but we still apply the style's pitch and rate
+  return null; // no match: use the device default voice with the fallback pitch
 }
 
 function makeUtterance(text, styleKey = state.settings.voice, speed = state.settings.rate) {
-  const style = VOICE_STYLES[styleKey] || VOICE_STYLES.default;
+  const style = VOICE_STYLES[styleKey] || VOICE_STYLES.female;
   const u = new SpeechSynthesisUtterance(text);
   const v = pickVoice(styleKey);
-  if (v) { u.voice = v; u.lang = v.lang; } else { u.lang = "en-US"; }
-  u.pitch = style.pitch;
-  u.rate = Math.min(2, Math.max(0.5, style.rate * (Number(speed) || 1)));
+  if (v) { u.voice = v; u.lang = v.lang; u.pitch = 1; } else { u.lang = "en-US"; u.pitch = style.fallbackPitch; }
+  u.rate = Math.min(2, Math.max(0.5, Number(speed) || 1));
   return u;
 }
 

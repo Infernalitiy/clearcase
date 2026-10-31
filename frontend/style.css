@@ -320,10 +320,8 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.45); }
 
 /* ---------- Bridgey, the helper character (decorative) ---------- */
 :root { --mascot-cheek: #ffb3b3; --mascot-accent: #ffd2c2; }
-:root[data-voice="warm"] { --mascot-cheek: #ffab8f; --mascot-accent: #ffd8bd; }
-:root[data-voice="calm"] { --mascot-cheek: #a9c8f5; --mascot-accent: #c5e3ff; }
-:root[data-voice="bright"] { --mascot-cheek: #ffc86b; --mascot-accent: #ffe7a3; }
-:root[data-voice="clear"] { --mascot-cheek: #9fd8b4; --mascot-accent: #cdeedb; }
+:root[data-voice="female"] { --mascot-cheek: #ffab8f; --mascot-accent: #ffd8bd; }
+:root[data-voice="male"] { --mascot-cheek: #a9c8f5; --mascot-accent: #c5e3ff; }
 .no-mascot .mascot, .no-mascot .mascot-bubble { display: none !important; }
 
 .mascot { width: 96px; height: 96px; flex: none; pointer-events: none; }
