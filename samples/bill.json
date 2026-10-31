@@ -1,0 +1,92 @@
+{
+  "document_type": "bill",
+  "title": "Patient statement from Maplewood General Hospital",
+  "confidence": "high",
+  "is_emergency_related": false,
+  "facts": [
+    {
+      "id": "f1",
+      "label": "Amount you owe",
+      "value": "$482.17",
+      "kind": "amount",
+      "plain_text": "After insurance paid its share and an adjustment was applied, the amount left for you to pay is $482.17.",
+      "simple_text": "You need to pay $482.17.",
+      "original_text": "AMOUNT DUE: $482.17",
+      "needs_verification": true
+    },
+    {
+      "id": "f2",
+      "label": "Payment due date",
+      "value": "November 30, 2026",
+      "kind": "date",
+      "plain_text": "The hospital wants your payment by November 30, 2026.",
+      "simple_text": "Pay by November 30, 2026.",
+      "original_text": "PAYMENT DUE BY: November 30, 2026",
+      "needs_verification": true
+    },
+    {
+      "id": "f3",
+      "label": "What this bill is for",
+      "value": "Emergency department visit on September 28, 2026",
+      "kind": "info",
+      "plain_text": "This is a statement for an emergency department visit, a chest X-ray, a lab test, and IV fluids. The date of service was September 28, 2026.",
+      "simple_text": "This bill is for your emergency room visit.",
+      "original_text": "Date of service: September 28, 2026",
+      "needs_verification": true
+    },
+    {
+      "id": "f4",
+      "label": "Total charges and insurance payment",
+      "value": "$1,841.00 total; insurance paid $1,108.83",
+      "kind": "amount",
+      "plain_text": "Total charges were $1,841.00. Evergreen Health Plan paid $1,108.83 and there was an insurance adjustment of $250.00.",
+      "simple_text": "Insurance paid part of the bill.",
+      "original_text": "Insurance paid (Evergreen Health Plan)",
+      "needs_verification": true
+    },
+    {
+      "id": "f5",
+      "label": "Help with paying",
+      "value": "",
+      "kind": "action",
+      "plain_text": "The hospital says financial assistance may be available. You can ask about payment plans and charity care.",
+      "simple_text": "You can ask for help paying.",
+      "original_text": "Financial assistance may be available. Ask about our payment plans and charity care.",
+      "needs_verification": false
+    },
+    {
+      "id": "f6",
+      "label": "If you think the bill is wrong",
+      "value": "",
+      "kind": "action",
+      "plain_text": "If you think this bill is wrong, you can ask the hospital for an itemized bill that lists each charge.",
+      "simple_text": "Ask for an itemized bill if it looks wrong.",
+      "original_text": "If you think this bill is wrong, you can request an itemized bill.",
+      "needs_verification": false
+    },
+    {
+      "id": "f7",
+      "label": "Billing contact",
+      "value": "(555) 014-2290",
+      "kind": "contact",
+      "plain_text": "You can call Patient Financial Services at (555) 014-2290, Monday to Friday, 8 AM to 5 PM, or email billing@maplewood-example.org.",
+      "simple_text": "Call the billing office with questions.",
+      "original_text": "Questions about this bill? Call Patient Financial Services at (555) 014-2290,",
+      "needs_verification": true
+    }
+  ],
+  "next_steps": [
+    "Pay $482.17 by November 30, 2026, or contact the hospital before then.",
+    "Call Patient Financial Services at (555) 014-2290 if you have questions or need help paying.",
+    "Ask about payment plans or charity care if you cannot pay the full amount.",
+    "Request an itemized bill if you think any charge is wrong."
+  ],
+  "contacts": [
+    {
+      "name": "Maplewood General Hospital Patient Financial Services",
+      "phone": "(555) 014-2290",
+      "email": "billing@maplewood-example.org"
+    }
+  ],
+  "full_text": "MAPLEWOOD GENERAL HOSPITAL\nPatient Financial Services | 1200 Orchard Lane, Springvale, OH 45001\nPATIENT STATEMENT\nPatient: Jordan Rivera\nAccount number: MGH-0048213\nStatement date: October 20, 2026\nDate of service: September 28, 2026\nCode Description Charge\n99284 Emergency department visit, level 4 $1,250.00\n71046 Chest X-ray, 2 views $310.00\n80053 Comprehensive metabolic panel (lab) $185.00\nJ7030 IV fluids, normal saline 1000 mL $96.00\nTotal charges $1,841.00\nInsurance paid (Evergreen Health Plan) -$1,108.83\nInsurance adjustment -$250.00\nPatient responsibility $482.17\nAMOUNT DUE: $482.17\nPAYMENT DUE BY: November 30, 2026\nQuestions about this bill? Call Patient Financial Services at (555) 014-2290,\nMonday to Friday, 8 AM to 5 PM, or email billing@maplewood-example.org.\nFinancial assistance may be available. Ask about our payment plans and charity care.\nIf you think this bill is wrong, you can request an itemized bill.\nPay online at maplewood-example.org/pay using your account number.\nSAMPLE - FICTIONAL. Not a real document. All names and numbers are made up."
+}

@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ClearCase: medical paperwork, your way</title>
+  <meta name="description" content="ClearCase turns any medical paper into the format each disabled patient can actually use.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <header class="site-header">
+    <a class="brand" href="#" id="brand-link" aria-label="ClearCase home">Clear<span>Case</span></a>
+    <div class="header-right">
+      <!-- Bridgey, the helper character. Decorative: everything it shows is also in the page and live region. -->
+      <div id="mascot" class="mascot" data-state="idle" aria-hidden="true"></div>
+      <nav aria-label="Main">
+        <button type="button" id="open-settings" class="btn btn-secondary">My needs &amp; settings</button>
+      </nav>
+      <p id="mascot-bubble" class="mascot-bubble" aria-hidden="true" hidden></p>
+    </div>
+  </header>
+
+  <!-- Screen reader announcements -->
+  <div id="announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+  <main id="main" tabindex="-1">
+
+    <!-- ===== Settings / profile ===== -->
+    <section id="screen-settings" class="screen" hidden aria-labelledby="settings-title">
+      <h1 id="settings-title" tabindex="-1">How should ClearCase work for you?</h1>
+      <p class="lead">Choose everything that helps. You can change this any time. Saved on this device only.</p>
+      <form id="settings-form">
+        <fieldset class="group">
+          <legend>My needs (choose any)</legend>
+          <label class="choice">
+            <input type="checkbox" name="needs" value="blind_low_vision" aria-describedby="desc-blind">
+            <span><strong>Blind or low vision</strong></span>
+          </label>
+          <span id="desc-blind" class="sr-only">Reads aloud, large high-contrast text, works with screen readers.</span>
+          <label class="choice">
+            <input type="checkbox" name="needs" value="deaf_hoh" aria-describedby="desc-deaf">
+            <span><strong>Deaf or hard of hearing</strong></span>
+          </label>
+          <span id="desc-deaf" class="sr-only">Text only. Writes messages for you instead of "call this number".</span>
+          <label class="choice">
+            <input type="checkbox" name="needs" value="cognitive_learning" aria-describedby="desc-cognitive">
+            <span><strong>Cognitive or learning disability</strong></span>
+          </label>
+          <span id="desc-cognitive" class="sr-only">Very short, simple steps. One card at a time.</span>
+          <label class="choice">
+            <input type="checkbox" name="needs" value="fatigue_motor" aria-describedby="desc-fatigue">
+            <span><strong>Low energy, fatigue, or limited movement</strong></span>
+          </label>
+          <span id="desc-fatigue" class="sr-only">A short checklist, big buttons, one-tap questions.</span>
+        </fieldset>
+
+        <fieldset>
+          <legend>Text size</legend>
+          <div class="segmented">
+            <label><input type="radio" name="textSize" value="normal"><span>Normal</span></label>
+            <label><input type="radio" name="textSize" value="large"><span>Large</span></label>
+            <label><input type="radio" name="textSize" value="xlarge"><span>Extra large</span></label>
+          </div>
+        </fieldset>
+
+        <fieldset class="group">
+          <legend>Display and sound</legend>
+          <label class="choice"><input type="checkbox" name="contrast"> High contrast (light text on black)</label>
+          <label class="choice"><input type="checkbox" name="dyslexia"> Dyslexia-friendly font and spacing</label>
+          <label class="choice"><input type="checkbox" name="autoRead"> Start reading aloud when a document opens</label>
+          <label class="choice"><input type="checkbox" name="caregiver"> I'm a caregiver helping someone else with their paperwork</label>
+          <label class="choice"><input type="checkbox" name="showMascot"> Show the helper character (Bridgey)</label>
+          <div id="audio-settings" class="group-extra">
+            <label for="rate" class="field-label">Reading speed</label>
+            <select id="rate" name="rate">
+              <option value="0.7">Slow</option>
+              <option value="0.85">A little slow</option>
+              <option value="1">Normal</option>
+              <option value="1.2">Fast</option>
+            </select>
+            <div id="voice-block" hidden>
+              <label for="voice" class="field-label">Voice</label>
+              <div class="row">
+                <select id="voice" name="voice" aria-describedby="voice-note"></select>
+                <button type="button" id="preview-voice" class="btn btn-secondary">Preview voice</button>
+              </div>
+              <p id="voice-note" class="sr-only">Natural voices by ElevenLabs. The text being read aloud is sent to ElevenLabs to make the audio.</p>
+            </div>
+          </div>
+        </fieldset>
+
+        <button type="submit" class="btn btn-primary btn-big">Save and continue</button>
+      </form>
+    </section>
+
+    <!-- ===== Home / upload ===== -->
+    <section id="screen-home" class="screen" hidden aria-labelledby="home-title">
+      <h1 id="home-title" tabindex="-1">Understand your medical paperwork</h1>
+      <p class="lead">Take a photo of a bill, an insurance letter, or discharge instructions. ClearCase explains it in the way that works for you, and you can stop and ask a question at any time.</p>
+
+      <p class="profile-summary">Set up for: <strong id="profile-summary-text">no needs chosen yet</strong>
+        <button type="button" class="btn-link" id="change-profile">Change</button></p>
+
+      <div class="notice" role="note" aria-labelledby="privacy-title">
+        <h2 id="privacy-title">Before you upload</h2>
+        <p>Your document is sent to an AI service to be read and is not saved by this app. Only upload documents you are comfortable sharing.</p>
+        <p>When read-aloud uses the natural voices, the text being read is also sent to ElevenLabs to make the audio.</p>
+        <p>This tool helps you understand paperwork. It is not medical or legal advice. Confirm important details with your provider or insurer.</p>
+      </div>
+
+      <form id="upload-form" class="panel">
+        <h2>Your document</h2>
+        <label for="file" class="field-label">Choose a photo, image or PDF (JPG, PNG or PDF)</label>
+        <input type="file" id="file" name="file" accept="image/jpeg,image/png,application/pdf" aria-describedby="file-hint">
+        <p id="file-hint" class="sr-only">On a phone you can take a new photo. Lay the page flat in good light. For PDFs, the first 3 pages are read.</p>
+        <button type="submit" class="btn btn-primary btn-big" id="analyze-btn">Read my document</button>
+        <p id="upload-error" class="error" role="alert" hidden></p>
+      </form>
+
+      <section class="panel" aria-labelledby="samples-title">
+        <h2 id="samples-title">Try a sample document</h2>
+        <p class="sr-only">Made-up documents. These work without uploading anything.</p>
+        <div class="row">
+          <button type="button" class="btn btn-secondary btn-big" data-sample="bill">Hospital bill</button>
+          <button type="button" class="btn btn-secondary btn-big" data-sample="denial">Insurance denial</button>
+          <button type="button" class="btn btn-secondary btn-big" data-sample="discharge">Discharge instructions</button>
+        </div>
+      </section>
+    </section>
+
+    <!-- ===== Loading ===== -->
+    <section id="screen-loading" class="screen" hidden aria-labelledby="loading-title">
+      <div class="loading" role="status">
+        <div class="spinner" aria-hidden="true"></div>
+        <h1 id="loading-title" tabindex="-1">Reading your document...</h1>
+        <p class="sr-only">This usually takes 10 to 30 seconds.</p>
+      </div>
+    </section>
+
+    <!-- ===== Results ===== -->
+    <section id="screen-result" class="screen" hidden aria-labelledby="doc-title">
+      <div id="banners"></div>
+      <h1 id="doc-title" tabindex="-1"></h1>
+      <p id="doc-meta" class="sr-only"></p>
+
+      <div class="toolbar" role="group" aria-label="Reading controls">
+        <button type="button" id="read-btn" class="btn btn-primary btn-big" aria-describedby="read-pos">Read aloud</button>
+        <button type="button" id="stop-btn" class="btn btn-secondary btn-big" hidden>Stop reading</button>
+        <span id="read-pos" class="sr-only"></span>
+        <button type="button" id="print-btn" class="btn btn-secondary">Print large-print copy</button>
+        <button type="button" id="restart-btn" class="btn btn-secondary">Start over with a new document</button>
+      </div>
+
+      <div id="quick-questions" class="quick" hidden>
+        <h2>Tap to ask</h2>
+        <div class="row" id="quick-row"></div>
+      </div>
+
+      <div id="cards" class="cards"></div>
+
+      <nav id="pager" class="pager" aria-label="Cards" hidden>
+        <button type="button" id="prev-btn" class="btn btn-secondary btn-big">Back</button>
+        <span id="pager-pos" aria-live="polite"></span>
+        <button type="button" id="next-btn" class="btn btn-primary btn-big">Next</button>
+      </nav>
+    </section>
+  </main>
+
+  <!-- Always-visible interrupt button -->
+  <button type="button" id="ask-fab" class="ask-fab" hidden aria-keyshortcuts="Q">
+    I'm confused / Ask <span class="key-hint">(Q)</span>
+  </button>
+
+  <!-- ===== Ask dialog ===== -->
+  <dialog id="ask-dialog" aria-labelledby="ask-title">
+    <div class="dialog-inner">
+      <div class="mascot mascot-small" data-state="idle" aria-hidden="true"></div>
+      <h2 id="ask-title">Ask a question</h2>
+      <p id="ask-context" class="hint"></p>
+
+      <div class="row suggested" role="group" aria-label="Suggested questions">
+        <button type="button" class="btn btn-secondary" data-q="What does this mean?">What does this mean?</button>
+        <button type="button" class="btn btn-secondary" data-q="Say it simpler">Say it simpler</button>
+        <button type="button" class="btn btn-secondary" data-q="Say that again">Say that again</button>
+        <button type="button" class="btn btn-secondary" data-q="What do I need to do?">What do I need to do?</button>
+      </div>
+
+      <form id="ask-form">
+        <label for="question" class="field-label">Or type your question</label>
+        <textarea id="question" rows="2" maxlength="1000"></textarea>
+        <div class="row">
+          <button type="submit" class="btn btn-primary">Ask</button>
+          <button type="button" id="mic-btn" class="btn btn-secondary" aria-pressed="false">Speak my question</button>
+        </div>
+        <p id="mic-status" class="hint" aria-live="polite"></p>
+      </form>
+
+      <div id="answer-box" class="answer" hidden tabindex="-1" aria-labelledby="answer-title">
+        <h3 id="answer-title">Answer</h3>
+        <p id="answer-text"></p>
+        <div id="answer-source" hidden>
+          <p class="source-label">From your document:</p>
+          <blockquote id="answer-quote"></blockquote>
+          <p id="answer-quote-note" class="hint"></p>
+        </div>
+        <div id="answer-actions" class="row"></div>
+      </div>
+
+      <button type="button" id="continue-btn" class="btn btn-primary btn-big">Continue</button>
+    </div>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>

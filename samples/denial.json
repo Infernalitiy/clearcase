@@ -1,0 +1,92 @@
+{
+  "document_type": "insurance_denial",
+  "title": "Evergreen Health Plan denial notice for MRI claim",
+  "confidence": "high",
+  "is_emergency_related": false,
+  "facts": [
+    {
+      "id": "f1",
+      "label": "What this is",
+      "value": "NOTICE OF ADVERSE BENEFIT DETERMINATION",
+      "kind": "info",
+      "plain_text": "This is a denial notice from your health plan, not a bill. It says your plan did not pay for an MRI of your lower spine.",
+      "simple_text": "Your insurance said no to paying for your MRI. This is not a bill.",
+      "original_text": "This is not a bill.",
+      "needs_verification": false
+    },
+    {
+      "id": "f2",
+      "label": "Amount covered",
+      "value": "$0.00",
+      "kind": "amount",
+      "plain_text": "The plan paid nothing for this service. The provider billed $2,140.00.",
+      "simple_text": "The plan will pay $0.00.",
+      "original_text": "Amount covered: $0.00",
+      "needs_verification": true
+    },
+    {
+      "id": "f3",
+      "label": "Reason for denial",
+      "value": "PA-04",
+      "kind": "info",
+      "plain_text": "The claim was denied because prior authorization (approval ahead of time) was not obtained before the service. Your plan requires this for advanced imaging such as MRI.",
+      "simple_text": "The plan wanted approval before the MRI. It was not done.",
+      "original_text": "Reason code PA-04: Prior authorization was not obtained before the service.",
+      "needs_verification": false
+    },
+    {
+      "id": "f4",
+      "label": "Appeal deadline",
+      "value": "April 13, 2027",
+      "kind": "date",
+      "plain_text": "You or your provider may file an appeal within 180 days of the date of the notice. The deadline printed is April 13, 2027.",
+      "simple_text": "You must ask for an appeal by April 13, 2027.",
+      "original_text": "Appeal deadline: April 13, 2027",
+      "needs_verification": true
+    },
+    {
+      "id": "f5",
+      "label": "How to appeal",
+      "value": "evergreen-example.com/appeals",
+      "kind": "action",
+      "plain_text": "Send a written appeal with a copy of this notice to the plan's address, or use the member portal. Your provider may also request a retroactive authorization.",
+      "simple_text": "Mail your appeal letter or use the website. Your provider can also ask for approval after the fact.",
+      "original_text": "Your provider may also request a retroactive authorization.",
+      "needs_verification": false
+    },
+    {
+      "id": "f6",
+      "label": "Service and date",
+      "value": "September 3, 2026",
+      "kind": "date",
+      "plain_text": "The service was an MRI of the lumbar spine without contrast (72148) at Northside Imaging Center on September 3, 2026.",
+      "simple_text": "The MRI was on September 3, 2026.",
+      "original_text": "Date of service: September 3, 2026",
+      "needs_verification": true
+    },
+    {
+      "id": "f7",
+      "label": "Billing warning",
+      "value": "",
+      "kind": "info",
+      "plain_text": "The provider may still bill you for this service. The notice says not to ignore bills while you appeal.",
+      "simple_text": "You may get a bill. Do not ignore it.",
+      "original_text": "You may be billed by the provider for this service. Do not ignore bills while you appeal.",
+      "needs_verification": false
+    }
+  ],
+  "next_steps": [
+    "Call Member Services at 1-800-555-0177 (TTY 711) with any questions.",
+    "Ask Northside Imaging Center to request a retroactive authorization.",
+    "File a written appeal with a copy of this notice before April 13, 2027.",
+    "Keep this notice and respond to any bills while you appeal."
+  ],
+  "contacts": [
+    {
+      "name": "Evergreen Health Plan Member Services",
+      "phone": "1-800-555-0177 (TTY 711)",
+      "email": "appeals@evergreen-example.com"
+    }
+  ],
+  "full_text": "EVERGREEN HEALTH PLAN\nMember Services | PO Box 7781, Lakeport, OH 45099\nNOTICE OF ADVERSE BENEFIT DETERMINATION\nThis is not a bill.\nDate of notice: October 15, 2026\nMember: Alex Chen\nMember ID: EVG-552190-03\nClaim number: CLM-2026-118845\nProvider: Northside Imaging Center\nService: MRI, lumbar spine without contrast (72148)\nDate of service: September 3, 2026\nAmount billed: $2,140.00\nAmount covered: $0.00\nWhy your claim was denied\nReason code PA-04: Prior authorization was not obtained before the service.\nYour plan requires prior authorization for advanced imaging such as MRI.\nYour right to appeal\nYou or your provider may file an appeal within 180 days of the date of this notice.\nAppeal deadline: April 13, 2027\nSend a written appeal with a copy of this notice to the address above, or use\nthe member portal at evergreen-example.com/appeals.\nYour provider may also request a retroactive authorization.\nQuestions? Call Member Services at 1-800-555-0177 (TTY 711).\nYou may also email appeals@evergreen-example.com.\nYou may be billed by the provider for this service. Do not ignore bills while you appeal.\nSAMPLE - FICTIONAL. Not a real document. All names and numbers are made up."
+}

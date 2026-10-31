@@ -1,0 +1,98 @@
+{
+  "document_type": "discharge",
+  "title": "Discharge instructions from Lakeside Medical Center",
+  "confidence": "high",
+  "is_emergency_related": true,
+  "facts": [
+    {
+      "id": "f1",
+      "label": "Diagnosis",
+      "value": "Community-acquired pneumonia",
+      "kind": "info",
+      "plain_text": "You were treated for community-acquired pneumonia, which is a lung infection. You were discharged on October 27, 2026.",
+      "simple_text": "You had a lung infection called pneumonia.",
+      "original_text": "Diagnosis: Community-acquired pneumonia",
+      "needs_verification": false
+    },
+    {
+      "id": "f2",
+      "label": "Antibiotic medicine",
+      "value": "Amoxicillin 500 mg capsule: take 1 capsule by mouth 3 times a day for 7 days.",
+      "kind": "medication",
+      "plain_text": "Take 1 amoxicillin 500 mg capsule by mouth 3 times a day for 7 days. The document says to finish all of it, even if you feel better.",
+      "simple_text": "Take 1 amoxicillin capsule 3 times a day for 7 days.",
+      "original_text": "1. Amoxicillin 500 mg capsule: take 1 capsule by mouth 3 times a day for 7 days.",
+      "needs_verification": true
+    },
+    {
+      "id": "f3",
+      "label": "Fever medicine",
+      "value": "Acetaminophen 500 mg tablet: take 1 to 2 tablets every 6 hours as needed for fever.",
+      "kind": "medication",
+      "plain_text": "Take 1 to 2 acetaminophen 500 mg tablets every 6 hours only if needed for fever. Do not take more than 6 tablets in 24 hours.",
+      "simple_text": "Take 1 or 2 tablets for fever. No more than 6 a day.",
+      "original_text": "2. Acetaminophen 500 mg tablet: take 1 to 2 tablets every 6 hours as needed for fever.",
+      "needs_verification": true
+    },
+    {
+      "id": "f4",
+      "label": "Follow-up appointment",
+      "value": "November 6, 2026 at 10:30 AM",
+      "kind": "date",
+      "plain_text": "You have a follow-up visit with Dr. Priya Patel on November 6, 2026 at 10:30 AM. It is at Lakeside Clinic, 2nd floor.",
+      "simple_text": "See Dr. Patel on November 6, 2026 at 10:30 AM.",
+      "original_text": "See Dr. Priya Patel on November 6, 2026 at 10:30 AM.",
+      "needs_verification": true
+    },
+    {
+      "id": "f5",
+      "label": "Call 911 if",
+      "value": "trouble breathing, chest pain, or lips turning blue",
+      "kind": "action",
+      "plain_text": "Call 911 right away if you have trouble breathing, chest pain, or lips turning blue.",
+      "simple_text": "Call 911 if you can't breathe well, have chest pain, or blue lips.",
+      "original_text": "Call 911 right away if you have trouble breathing, chest pain, or lips turning blue.",
+      "needs_verification": false
+    },
+    {
+      "id": "f6",
+      "label": "Call your doctor if",
+      "value": "fever over 101 F for more than 2 days",
+      "kind": "action",
+      "plain_text": "Call your doctor if your fever is over 101 F for more than 2 days, or if you cannot keep medicines down.",
+      "simple_text": "Call your doctor if fever stays high or you throw up your medicine.",
+      "original_text": "Call your doctor if your fever is over 101 F for more than 2 days, or you cannot keep",
+      "needs_verification": true
+    },
+    {
+      "id": "f7",
+      "label": "Care at home",
+      "value": "",
+      "kind": "action",
+      "plain_text": "Rest and drink plenty of fluids. Do not drive while you feel very tired. Use your incentive spirometer 10 times every hour while awake.",
+      "simple_text": "Rest, drink fluids, and use your breathing device.",
+      "original_text": "Use your incentive spirometer 10 times every hour while awake.",
+      "needs_verification": false
+    }
+  ],
+  "next_steps": [
+    "Call 911 right away if you have trouble breathing, chest pain, or lips turning blue.",
+    "Take amoxicillin as written and finish all of it.",
+    "Use acetaminophen only as needed for fever and no more than 6 tablets in 24 hours.",
+    "Go to your follow-up visit with Dr. Patel on November 6, 2026 at 10:30 AM.",
+    "Call your doctor if your fever is over 101 F for more than 2 days or you cannot keep medicines down."
+  ],
+  "contacts": [
+    {
+      "name": "Lakeside Clinic",
+      "phone": "(555) 013-4400",
+      "email": ""
+    },
+    {
+      "name": "Nurse line",
+      "phone": "(555) 013-4499",
+      "email": ""
+    }
+  ],
+  "full_text": "LAKESIDE MEDICAL CENTER\nDischarge Instructions\nPatient: Sam Okafor\nDischarge date: October 27, 2026\nDiagnosis: Community-acquired pneumonia\nDoctor: Dr. Priya Patel, Internal Medicine\nYour medicines\n1. Amoxicillin 500 mg capsule: take 1 capsule by mouth 3 times a day for 7 days.\nFinish all of it, even if you feel better.\n2. Acetaminophen 500 mg tablet: take 1 to 2 tablets every 6 hours as needed for fever.\nDo not take more than 6 tablets in 24 hours.\nActivity and care at home\nRest and drink plenty of fluids. No driving while you feel very tired.\nUse your incentive spirometer 10 times every hour while awake.\nFollow-up appointment\nSee Dr. Priya Patel on November 6, 2026 at 10:30 AM.\nLakeside Clinic, 2nd floor. Phone: (555) 013-4400.\nWHEN TO GET HELP\nCall 911 right away if you have trouble breathing, chest pain, or lips turning blue.\nCall your doctor if your fever is over 101 F for more than 2 days, or you cannot keep\nmedicines down.\nPatient portal: lakeside-example.org/mychart | Nurse line: (555) 013-4499\nSAMPLE - FICTIONAL. Not a real document. All names and numbers are made up."
+}
