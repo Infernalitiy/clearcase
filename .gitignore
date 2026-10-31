@@ -7,3 +7,4 @@ node_modules/
 venv/
 tests/screenshot.png
 tests/blurry.png
+tests/*.pdf

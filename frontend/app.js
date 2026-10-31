@@ -39,7 +39,7 @@ const reader = {
 
 // ---------------- Settings ----------------
 function loadSettings() {
-  const defaults = { needs: [], textSize: "normal", contrast: false, dyslexia: false, autoRead: false, rate: "1", saved: false };
+  const defaults = { needs: [], textSize: "normal", contrast: false, dyslexia: false, autoRead: false, caregiver: false, rate: "1", saved: false };
   try {
     return Object.assign(defaults, JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}"));
   } catch (e) {
@@ -76,6 +76,7 @@ function fillSettingsForm() {
   f.contrast.checked = s.contrast;
   f.dyslexia.checked = s.dyslexia;
   f.autoRead.checked = s.autoRead;
+  f.caregiver.checked = s.caregiver;
   f.rate.value = s.rate;
 }
 
@@ -98,6 +99,7 @@ $("#settings-form").addEventListener("submit", (e) => {
     contrast: f.contrast.checked,
     dyslexia: f.dyslexia.checked,
     autoRead: f.autoRead.checked,
+    caregiver: f.caregiver.checked,
     rate: f.rate.value,
     saved: true,
   };
@@ -128,6 +130,15 @@ $("#open-settings").addEventListener("click", () => { reader.stop(); fillSetting
 $("#change-profile").addEventListener("click", () => { fillSettingsForm(); showScreen("settings"); });
 $("#brand-link").addEventListener("click", (e) => { e.preventDefault(); goHome(); });
 $("#restart-btn").addEventListener("click", goHome);
+$("#print-btn").addEventListener("click", () => { reader.stop(); window.print(); });
+
+// Printed copies show every card and every "Show original" quote.
+let openedForPrint = [];
+window.addEventListener("beforeprint", () => {
+  openedForPrint = $$("details.original:not([open])");
+  openedForPrint.forEach((d) => { d.open = true; });
+});
+window.addEventListener("afterprint", () => { openedForPrint.forEach((d) => { d.open = false; }); });
 
 function goHome() {
   reader.stop();
@@ -165,8 +176,8 @@ $("#upload-form").addEventListener("submit", async (e) => {
   const file = $("#file").files[0];
   const errEl = $("#upload-error");
   errEl.hidden = true;
-  if (!file) return showUploadError("Please choose an image of your document first.");
-  if (!/^image\/(jpeg|png)$/.test(file.type)) return showUploadError("Please choose a JPG or PNG image.");
+  if (!file) return showUploadError("Please choose a photo or PDF of your document first.");
+  if (!/^(image\/(jpeg|png)|application\/pdf)$/.test(file.type)) return showUploadError("Please choose a JPG, PNG or PDF file.");
   if (file.size > 10 * 1024 * 1024) return showUploadError("That image is too big. Please use one under 10 MB.");
   const body = new FormData();
   body.append("file", file);
@@ -213,7 +224,8 @@ function factText(f) {
 
 function buildCards(doc) {
   const cards = [];
-  const intro = `This is ${DOC_TYPE_NAMES[doc.document_type] || "a document"}.`;
+  const intro = `This is ${DOC_TYPE_NAMES[doc.document_type] || "a document"}` +
+    (state.settings.caregiver ? " for the person you're helping." : ".");
   const introMore = simpleWords()
     ? "I will go through it one small part at a time."
     : `There are ${doc.facts.length} important parts. You can stop me and ask a question at any time.`;
@@ -605,6 +617,7 @@ async function ask(question) {
           fact_id: card && card.fact ? card.fact.id : "",
           document: state.doc,
           needs: state.settings.needs,
+          caregiver: state.settings.caregiver,
         }),
       }, 60000);
     } catch (e) {
@@ -660,7 +673,7 @@ async function makeSimpler(card, idx) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ question: "Explain this part in even simpler words. One or two very short sentences. Use words a child knows.",
-        fact_id: f.id, document: state.doc, needs: state.settings.needs }),
+        fact_id: f.id, document: state.doc, needs: state.settings.needs, caregiver: state.settings.caregiver }),
     }, 60000);
     if (r.answerable) f.simpleOverride = r.answer;
   } catch (e) {
@@ -688,7 +701,7 @@ async function draftMessage(contact) {
   let r;
   try {
     r = await api("/api/ask", { method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question: q, fact_id: "", document: state.doc, needs: state.settings.needs }) }, 60000);
+      body: JSON.stringify({ question: q, fact_id: "", document: state.doc, needs: state.settings.needs, caregiver: state.settings.caregiver }) }, 60000);
   } catch (e) {
     r = { answer: e.code === "no_api_key" ? "Writing messages needs the AI service, which isn't set up here." : e.message,
       source_quote: "", answerable: false, error: true };

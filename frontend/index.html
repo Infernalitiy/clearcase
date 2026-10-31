@@ -61,6 +61,7 @@
           <label class="choice"><input type="checkbox" name="contrast"> High contrast (light text on black)</label>
           <label class="choice"><input type="checkbox" name="dyslexia"> Dyslexia-friendly font and spacing</label>
           <label class="choice"><input type="checkbox" name="autoRead"> Start reading aloud when a document opens</label>
+          <label class="choice"><input type="checkbox" name="caregiver"> I'm a caregiver helping someone else with their paperwork</label>
           <label for="rate" class="field-label">Reading speed</label>
           <select id="rate" name="rate">
             <option value="0.7">Slow</option>
@@ -90,9 +91,9 @@
 
       <form id="upload-form" class="panel">
         <h2>Your document</h2>
-        <label for="file" class="field-label">Choose a photo or image (JPG or PNG)</label>
-        <input type="file" id="file" name="file" accept="image/jpeg,image/png" aria-describedby="file-hint">
-        <p id="file-hint" class="hint">On a phone you can take a new photo. Lay the page flat in good light.</p>
+        <label for="file" class="field-label">Choose a photo, image or PDF (JPG, PNG or PDF)</label>
+        <input type="file" id="file" name="file" accept="image/jpeg,image/png,application/pdf" aria-describedby="file-hint">
+        <p id="file-hint" class="hint">On a phone you can take a new photo. Lay the page flat in good light. For PDFs, the first 3 pages are read.</p>
         <button type="submit" class="btn btn-primary btn-big" id="analyze-btn">Read my document</button>
         <p id="upload-error" class="error" role="alert" hidden></p>
       </form>
@@ -127,6 +128,7 @@
         <button type="button" id="read-btn" class="btn btn-primary btn-big" aria-describedby="read-pos">Read aloud</button>
         <button type="button" id="stop-btn" class="btn btn-secondary btn-big" hidden>Stop reading</button>
         <span id="read-pos" class="hint"></span>
+        <button type="button" id="print-btn" class="btn btn-secondary">Print large-print copy</button>
         <button type="button" id="restart-btn" class="btn btn-secondary">Start over with a new document</button>
       </div>
 
