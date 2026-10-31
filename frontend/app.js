@@ -94,7 +94,7 @@ function loadSettings() {
   const defaults = { needs: [], textSize: "normal", contrast: false, dyslexia: false, autoRead: false, caregiver: false, rate: "1", voice: "female", showMascot: true, saved: false };
   try {
     const s = Object.assign(defaults, JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}"));
-    if (s.voice !== "female" && s.voice !== "male") s.voice = s.voice === "calm" ? "male" : "female"; // older saved styles
+    if (!["warm", "female", "male"].includes(s.voice)) s.voice = s.voice === "calm" ? "male" : "female"; // older saved styles
     return s;
   } catch (e) {
     return defaults;
@@ -511,13 +511,16 @@ $("#prev-btn").addEventListener("click", () => userMoveTo(state.page - 1));
 $("#next-btn").addEventListener("click", () => userMoveTo(state.page + 1));
 
 // ---------------- Voice styles ----------------
-// Female or male, chosen from the device's own voices. Names are tried in order.
-// If the device has no matching voice, the default voice is used with a higher or lower pitch.
+// Voices come from the device. Names are tried in order. "Warm" uses a female voice, a little
+// higher and slower. If the device has no matching voice, the default voice is used with fallbackPitch.
+const FEMALE_VOICES = [/Microsoft (Aria|Jenny|Ava|Emma|Michelle|Zira)/i, /Google US English/i, /Google UK English Female/i,
+  /^(Samantha|Karen|Moira|Tessa|Fiona|Victoria|Allison|Susan)\b/i, /\bFemale\b/i];
 const VOICE_STYLES = {
+  warm: { names: FEMALE_VOICES, pitch: 1.1, rate: 0.9, fallbackPitch: 1.2 },
   female: { names: [/Microsoft (Aria|Jenny|Ava|Emma|Michelle|Zira)/i, /Google US English/i, /Google UK English Female/i,
-    /^(Samantha|Karen|Moira|Tessa|Fiona|Victoria|Allison|Susan)\b/i, /\bFemale\b/i], fallbackPitch: 1.15 },
+    /^(Samantha|Karen|Moira|Tessa|Fiona|Victoria|Allison|Susan)\b/i, /\bFemale\b/i], pitch: 1, rate: 1, fallbackPitch: 1.15 },
   male: { names: [/Microsoft (Guy|Andrew|Brian|Christopher|Eric|Roger|David|Mark)/i, /Google UK English Male/i,
-    /^(Daniel|Alex|Aaron|Tom)\b/i, /\bMale\b/i], fallbackPitch: 0.8 },
+    /^(Daniel|Alex|Aaron|Tom)\b/i, /\bMale\b/i], pitch: 1, rate: 1, fallbackPitch: 0.8 },
 };
 // Keep novelty voices (e.g. macOS "Zarvox", "Bad News") out of a medical app.
 const NOVELTY_VOICES = /Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Deranged|Good News|Hysterical|Jester|Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox/i;
@@ -541,8 +544,8 @@ function makeUtterance(text, styleKey = state.settings.voice, speed = state.sett
   const style = VOICE_STYLES[styleKey] || VOICE_STYLES.female;
   const u = new SpeechSynthesisUtterance(text);
   const v = pickVoice(styleKey);
-  if (v) { u.voice = v; u.lang = v.lang; u.pitch = 1; } else { u.lang = "en-US"; u.pitch = style.fallbackPitch; }
-  u.rate = Math.min(2, Math.max(0.5, Number(speed) || 1));
+  if (v) { u.voice = v; u.lang = v.lang; u.pitch = style.pitch; } else { u.lang = "en-US"; u.pitch = style.fallbackPitch; }
+  u.rate = Math.min(2, Math.max(0.5, style.rate * (Number(speed) || 1)));
   return u;
 }
 

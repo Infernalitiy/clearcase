@@ -20,7 +20,7 @@ Pick one or more needs on first launch (saved on your device only). The same doc
 
 | Need | What changes |
 |---|---|
-| **Blind / low vision** (`blind_low_vision`) | Audio-first: starts reading aloud automatically, one sentence at a time, with the current sentence highlighted. Choose a **female or male voice**. Large, high-contrast text by default. Semantic HTML and live regions so screen readers work out of the box. |
+| **Blind / low vision** (`blind_low_vision`) | Audio-first: starts reading aloud automatically, one sentence at a time, with the current sentence highlighted. Choose a **warm female (mom-like), female or male voice**. Large, high-contrast text by default. Semantic HTML and live regions so screen readers work out of the box. |
 | **Deaf / hard of hearing** (`deaf_hoh`) | Text only, no audio dependence. Instead of "call this number", every contact has **Write a message for me**, which drafts an email asking for a written reply (with an accommodation request), plus Copy and Open-in-email buttons. Phone numbers mention relay services (711). |
 | **Cognitive / learning** (`cognitive_learning`) | Very short, simple sentences. **One card at a time** with big Next/Back buttons. A **Make it even simpler** button on every card. Optional dyslexia-friendly font and spacing. |
 | **Fatigue / motor** (`fatigue_motor`) | The "what to do" **checklist comes first**, with big tap-to-check buttons. **One-tap questions** ("What do I need to do?", "Say it simpler", "Write a message for me") so nothing needs typing. Larger touch targets everywhere. |
@@ -45,7 +45,7 @@ A large **I'm confused / Ask** button is always visible, also on the **Q** key. 
 - Document text is treated as data, never as instructions (prompt-injection resistant prompts).
 
 ### Also included
-- **Female or male voice**, with a Preview button. CareBridge picks the best matching voice already on your device. If there isn't one, it uses the default voice with a higher or lower pitch. Voices sound different on different computers and browsers.
+- **Voice choice:** *Warm female (mom-like)*, *Female* or *Male*, with a Preview button. CareBridge picks the best matching voice already on your device. The warm voice is a female voice that is slightly higher and slower. If there's no matching voice, it uses the default voice with a higher or lower pitch. Voices sound different on different computers and browsers, and they are not real or cloned voices.
 - **Bridgey, the helper character:** an original mascot in the top right who "does the talking". Its mouth moves while reading, and it shows when it's paused, listening or thinking. Its speech bubble shows the sentence being read, like live captions. Bridgey is decorative (screen readers skip it), stops moving when reduced motion is on, and can be switched off in settings.
 - **iOS-style interface:** frosted-glass cards, switches and a segmented control. The colours are adjusted to meet WCAG AA contrast, and the glass turns off in high-contrast mode and when the device asks for reduced transparency.
 - PDF upload (first 3 pages, including scanned PDFs), JPG and PNG.
@@ -120,7 +120,7 @@ python tests/ui_smoke.py http://localhost:5000 --ai   # plus real upload and que
 
 - **We have not yet tested CareBridge with disabled users.** Every design choice here is based on published accessibility guidance and our own reasoning, not on user research. That is the most important next step.
 - AI can misread documents, especially blurry photos or handwriting. That's why every card has *Show original* and key facts are flagged for double-checking, but errors are still possible.
-- Tested in Chromium. Speech voices and voice input vary by browser and OS. On a device with only one English voice, which ignores pitch, the female and male choices may sound alike. Voice input does not work in Firefox. We have not done full testing with NVDA, JAWS or VoiceOver yet.
+- Tested in Chromium. Speech voices and voice input vary by browser and OS. On a device with only one English voice, which ignores pitch, the voice choices may sound alike. Voice input does not work in Firefox. We have not done full testing with NVDA, JAWS or VoiceOver yet.
 - English only.
 - The dyslexia font uses OpenDyslexic if it's installed on your device, and falls back to a rounded font with wider spacing otherwise.
 - PDFs: only the first 3 pages are read.
@@ -133,7 +133,8 @@ python tests/ui_smoke.py http://localhost:5000 --ai   # plus real upload and que
 3. More languages, and sign language video explanations for Deaf users who prefer ASL.
 4. Multi-document history (kept on the device) to track bills and appeal deadlines over time.
 5. Appeal letter and payment-plan request templates built from the document.
-6. Production hardening: rate limiting, a production WSGI server, and a privacy review.
+6. Optional premium neural voices from a TTS API (for example Voicemaker), after a privacy review, because it would mean sending document text to another service.
+7. Production hardening: rate limiting, a production WSGI server, and a privacy review.
 
 ## Built with
 
