@@ -10,6 +10,8 @@ import json
 import logging
 import os
 import re
+import urllib.error
+import urllib.request
 
 from dotenv import load_dotenv
 
@@ -18,7 +20,7 @@ load_dotenv(os.path.join(ROOT, ".env"))
 
 import boto3
 from botocore.config import Config
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, Response, jsonify, request, send_from_directory
 from PIL import Image, ImageOps
 from werkzeug.exceptions import HTTPException
 
@@ -371,6 +373,61 @@ def ask():
     q = norm(result["source_quote"])
     result["quote_verified"] = bool(q) and q in doc_text(document)
     return jsonify(result)
+
+
+# ---------- Natural voice (optional, ElevenLabs) ----------
+
+ELEVEN_MODEL = os.environ.get("ELEVENLABS_MODEL_ID", "eleven_flash_v2_5")
+
+
+def eleven_settings():
+    key = os.environ.get("ELEVENLABS_API_KEY", "").strip()
+    voice = os.environ.get("ELEVENLABS_VOICE_ID", "").strip()
+    return (key, voice) if key and re.fullmatch(r"[A-Za-z0-9]{10,40}", voice or "") else (None, None)
+
+
+@app.get("/api/config")
+def config():
+    return jsonify({"natural_voice": eleven_settings()[0] is not None})
+
+
+@app.post("/api/tts")
+def tts():
+    """Turn one short sentence into speech with ElevenLabs. Audio is returned, never stored."""
+    key, voice = eleven_settings()
+    if not key:
+        raise ApiError("The natural voice isn't set up on this server.", 503, "no_tts")
+    body = request.get_json(silent=True) or {}
+    text = str(body.get("text") or "").strip()
+    if not text:
+        raise ApiError("No text to read.", 400, "no_text")
+    if len(text) > 1500:
+        raise ApiError("That text is too long to read in one go.", 400, "too_long")
+    req = urllib.request.Request(
+        f"https://api.elevenlabs.io/v1/text-to-speech/{voice}?output_format=mp3_44100_128",
+        data=json.dumps({"text": text, "model_id": ELEVEN_MODEL}).encode(),
+        headers={"xi-api-key": key, "Content-Type": "application/json", "Accept": "audio/mpeg"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=20) as r:
+            audio = r.read()
+    except urllib.error.HTTPError as e:
+        try:
+            detail = json.loads(e.read() or b"{}").get("detail") or {}
+            status = detail.get("status", "") if isinstance(detail, dict) else ""
+        except ValueError:
+            status = ""
+        log.error("ElevenLabs error %s %s", e.code, status)  # status code only, never the text
+        reasons = {401: "the ElevenLabs key was rejected or lacks text-to-speech permission",
+                   404: "the ElevenLabs voice ID wasn't found in your account",
+                   429: "ElevenLabs is rate limiting or the quota is used up"}
+        raise ApiError(f"The natural voice failed: {reasons.get(e.code, 'ElevenLabs returned an error')}"
+                       + (f" ({status})" if status else "") + ".", 502, "tts_error")
+    except Exception as e:
+        log.error("ElevenLabs call failed: %s", type(e).__name__)
+        raise ApiError("The natural voice didn't respond.", 502, "tts_error")
+    return Response(audio, mimetype="audio/mpeg")
 
 
 # ---------- Frontend ----------

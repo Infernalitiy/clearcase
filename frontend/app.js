@@ -94,7 +94,7 @@ function loadSettings() {
   const defaults = { needs: [], textSize: "normal", contrast: false, dyslexia: false, autoRead: false, caregiver: false, rate: "1", voice: "female", showMascot: true, saved: false };
   try {
     const s = Object.assign(defaults, JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}"));
-    if (s.voice !== "female" && s.voice !== "male") s.voice = s.voice === "calm" ? "male" : "female"; // older saved styles
+    if (!["female", "male", "natural"].includes(s.voice)) s.voice = s.voice === "calm" ? "male" : "female"; // older saved styles
     return s;
   } catch (e) {
     return defaults;
@@ -158,9 +158,16 @@ $("#settings-form").addEventListener("change", updateAudioSettings);
 
 const VOICE_NOTE = "These are your device's built-in voices. For the most natural voices, open CareBridge in Microsoft Edge.";
 $("#preview-voice").addEventListener("click", () => {
-  if (!("speechSynthesis" in window)) return announce("Read aloud isn't available in this browser.");
   const f = $("#settings-form");
-  speechSynthesis.cancel();
+  stopAllSpeech();
+  if (f.voice.value === "natural" && natural.available) {
+    $("#voice-note").textContent = "Using: the natural voice (ElevenLabs). The text being read is sent to ElevenLabs to make the audio.";
+    natural.play("Hi, I'm here to help you read your papers.", () => true, () => {}, () => {
+      $("#voice-note").textContent = "The natural voice isn't working right now. Check the ElevenLabs key and voice ID.";
+    }, f.rate.value);
+    return;
+  }
+  if (!("speechSynthesis" in window)) return announce("Read aloud isn't available in this browser.");
   const u = makeUtterance("Hi, I'm here to help you read your papers.", f.voice.value, f.rate.value);
   $("#voice-note").textContent = `Using: ${u.voice ? u.voice.name : "your device's default voice"}. ` + VOICE_NOTE;
   speechSynthesis.speak(u);
@@ -552,11 +559,70 @@ function makeUtterance(text, styleKey = state.settings.voice, speed = state.sett
   return u;
 }
 
+// ---------------- Natural voice (optional, ElevenLabs through our server) ----------------
+// One short audio clip per sentence, so stop/resume tracking works exactly like the browser voice.
+const natural = {
+  available: false,
+  failed: false,
+  audio: new Audio(),
+  cache: new Map(), // sentence -> Promise<blob URL>, kept in this tab's memory only
+  url(text) {
+    if (!natural.cache.has(text)) {
+      const p = fetch("/api/tts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }) })
+        .then(async (r) => {
+          if (!r.ok) throw new Error(((await r.json().catch(() => ({}))).error) || "tts failed");
+          return URL.createObjectURL(await r.blob());
+        });
+      p.catch(() => natural.cache.delete(text));
+      natural.cache.set(text, p);
+    }
+    return natural.cache.get(text);
+  },
+  prefetch(text) { if (text) natural.url(text).catch(() => {}); },
+  async play(text, isCurrent, onend, onerror, speed = state.settings.rate) {
+    try {
+      const src = await natural.url(text);
+      if (!isCurrent()) return;
+      const a = natural.audio;
+      a.onended = onend;
+      a.onerror = () => { if (isCurrent()) onerror(); };
+      a.src = src;
+      a.playbackRate = Number(speed) || 1;
+      await a.play();
+    } catch (e) {
+      if (isCurrent()) onerror(e);
+    }
+  },
+  stop() {
+    const a = natural.audio;
+    a.onended = null;
+    a.onerror = null;
+    a.pause();
+  },
+  fail() {
+    natural.failed = true;
+    announce("The natural voice isn't working right now, so I'm using the device voice.");
+  },
+};
+const useNatural = () => natural.available && !natural.failed && state.settings.voice === "natural";
+
+function stopAllSpeech() {
+  if ("speechSynthesis" in window) speechSynthesis.cancel();
+  natural.stop();
+}
+
+fetch("/api/config").then((r) => r.json()).then((cfg) => {
+  if (!cfg.natural_voice) return;
+  natural.available = true;
+  $("#voice").prepend(el("option", { value: "natural" }, "Natural voice (ElevenLabs)"));
+  if (state.settings.voice === "natural") $("#voice").value = "natural";
+}).catch(() => {});
+
 // ---------------- Read aloud ----------------
 // We speak ONE sentence per utterance and track the position ourselves,
 // because speechSynthesis.pause()/resume() is unreliable across browsers.
 reader.play = function () {
-  if (!("speechSynthesis" in window) || !audioOn() || !state.segments.length) return;
+  if ((!("speechSynthesis" in window) && !useNatural()) || !audioOn() || !state.segments.length) return;
   if (reader.pos >= state.segments.length) reader.pos = 0;
   reader.playing = true;
   updateReadUi();
@@ -571,8 +637,7 @@ reader.speakCurrent = function () {
   mascot.set("speaking");
   mascot.caption(s.text);
   if (oneAtATime() && s.card !== state.page) goToPage(s.card, false);
-  const u = makeUtterance(s.text);
-  u.onend = () => {
+  const finished = () => {
     if (my !== reader.token || !reader.playing) return;
     reader.pos++;
     if (reader.pos >= state.segments.length) {
@@ -587,6 +652,17 @@ reader.speakCurrent = function () {
     updateReadUi();
     reader.speakCurrent();
   };
+  if (useNatural()) {
+    natural.play(s.text, () => my === reader.token && reader.playing, finished, () => {
+      natural.fail();
+      reader.speakCurrent(); // same sentence, now with the device voice
+    });
+    const next = state.segments[reader.pos + 1];
+    if (next) natural.prefetch(next.text); // so the next sentence starts without a gap
+    return;
+  }
+  const u = makeUtterance(s.text);
+  u.onend = finished;
   u.onerror = (e) => {
     if (my !== reader.token || e.error === "interrupted" || e.error === "canceled") return;
     if (u.voice && !u.voice.localService && !onlineVoicesFailed) {
@@ -607,7 +683,7 @@ reader.speakCurrent = function () {
 reader.stop = function () {
   reader.token++;
   reader.playing = false;
-  if ("speechSynthesis" in window) speechSynthesis.cancel();
+  stopAllSpeech();
   updateReadUi();
 };
 
@@ -673,7 +749,7 @@ function openAsk(prefill) {
 function closeAsk(resume) {
   stopListening();
   onceToken++;
-  if ("speechSynthesis" in window) speechSynthesis.cancel();
+  stopAllSpeech();
   mascot.set(reader.wasPlaying ? "paused" : "idle");
   if (dialog.open) dialog.close();
   if (resume && reader.wasPlaying) {
@@ -786,12 +862,17 @@ function showAnswer(r, pending = false, extraActions = []) {
 // Speak an answer sentence by sentence (short utterances are more reliable in Chrome).
 let onceToken = 0;
 function speakOnce(text) {
-  if (!("speechSynthesis" in window)) return;
-  speechSynthesis.cancel();
+  stopAllSpeech();
   const my = ++onceToken;
   const parts = sentences(text);
   mascot.set("speaking");
   mascot.caption(parts[0] || "");
+  if (useNatural()) {
+    natural.play(text, () => my === onceToken, () => { if (my === onceToken && !reader.playing) mascot.set("idle"); },
+      () => { natural.fail(); speakOnce(text); });
+    return;
+  }
+  if (!("speechSynthesis" in window)) return;
   parts.forEach((s, i) => {
     const u = makeUtterance(s);
     u.onstart = () => { if (my === onceToken) mascot.caption(s); };
@@ -876,7 +957,7 @@ if (!SR) {
 
 $("#mic-btn").addEventListener("click", () => {
   if (recog) return stopListening();
-  if ("speechSynthesis" in window) speechSynthesis.cancel(); // never listen while talking
+  stopAllSpeech(); // never listen while talking
   recog = new SR();
   recog.lang = "en-US";
   recog.interimResults = false;

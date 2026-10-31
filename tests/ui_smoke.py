@@ -146,6 +146,53 @@ with sync_playwright() as p:
     page.wait_for_selector("#screen-result:not([hidden])")
     check(True, "Enter on a sample button opens the document")
 
+    # --- Natural voice (ElevenLabs) with a fake server: short WAV clips, no credits used
+    import io, wave
+    buf = io.BytesIO()
+    with wave.open(buf, "wb") as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(8000); w.writeframes(b"\0\0" * 2400)  # 0.3 s
+    clip = buf.getvalue()
+    tts_texts, tts_mode = [], {"fail": False}
+
+    def fake_tts(route):
+        tts_texts.append(route.request.post_data_json["text"])
+        if tts_mode["fail"]:
+            route.fulfill(status=502, json={"error": "fake failure", "code": "tts_error"})
+        else:
+            route.fulfill(status=200, body=clip, headers={"Content-Type": "audio/wav"})
+    page.route("**/api/config", lambda r: r.fulfill(json={"natural_voice": True}))
+    page.route("**/api/tts", fake_tts)
+    page.goto(BASE)
+    page.evaluate("localStorage.clear()")
+    page.reload()
+    page.wait_for_selector("#voice option[value=natural]", state="attached")
+    page.uncheck("input[name=autoRead]")
+    page.select_option("#voice", "natural")
+    page.click("#settings-form button[type=submit]")
+    page.click("[data-sample=bill]")
+    page.wait_for_selector("#screen-result:not([hidden])")
+    page.click("#read-btn")
+    page.wait_for_timeout(1500)
+    pos = page.evaluate("reader.pos")
+    check(pos > 0 and len(tts_texts) > pos, f"natural voice reads sentence by sentence (sentence {pos}, {len(tts_texts)} clips)")
+    page.keyboard.press("q")
+    check(page.evaluate("natural.audio.paused") and not page.evaluate("reader.playing"), "Q stops the natural voice")
+    pos_q = page.evaluate("reader.pos")
+    page.keyboard.press("Escape")
+    page.click("#read-btn")
+    page.wait_for_timeout(100)
+    check(page.evaluate("reader.pos") == pos_q and page.evaluate("reader.playing"), "natural voice resumes on the same sentence")
+    tts_mode["fail"] = True
+    page.evaluate("natural.cache.clear()")
+    page.click("#stop-btn")
+    page.click("#read-btn")
+    page.wait_for_timeout(800)
+    check(page.evaluate("natural.failed") and page.evaluate("reader.playing"), "if ElevenLabs fails, reading continues with the device voice")
+    errors[:] = [e for e in errors if "status of 502" not in e]  # the 502s above were faked on purpose
+    page.unroute("**/api/config")
+    page.unroute("**/api/tts")
+    page.click("#stop-btn")
+
     if "--ai" in sys.argv:  # these need the Bedrock key on the server
         page.keyboard.press("q")
         page.click("#ask-dialog [data-q='What does this mean?']")
