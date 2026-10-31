@@ -163,7 +163,7 @@ $("#preview-voice").addEventListener("click", () => {
   stopAllSpeech();
   if (f.voice.value.startsWith("eleven:") && natural.available) {
     natural.play("Hi, I'm here to help you read your papers.", () => true, () => {}, () => {
-      $("#voice-note").textContent = "The natural voice isn't working right now, so the device voice will be used. Check the ElevenLabs key.";
+      announce("The natural voice isn't working right now, so the device voice will be used.");
     }, f.rate.value, f.voice.value.slice(7));
     return;
   }
