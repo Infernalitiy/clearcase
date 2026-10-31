@@ -27,7 +27,7 @@
       <h1 id="settings-title" tabindex="-1">How should CareBridge work for you?</h1>
       <p class="lead">Choose everything that helps. You can change this any time. Saved on this device only.</p>
       <form id="settings-form">
-        <fieldset>
+        <fieldset class="group">
           <legend>My needs (choose any)</legend>
           <label class="choice">
             <input type="checkbox" name="needs" value="blind_low_vision" aria-describedby="desc-blind">
@@ -53,20 +53,20 @@
 
         <fieldset>
           <legend>Text size</legend>
-          <div class="row">
-            <label class="choice inline"><input type="radio" name="textSize" value="normal"> Normal</label>
-            <label class="choice inline"><input type="radio" name="textSize" value="large"> Large</label>
-            <label class="choice inline"><input type="radio" name="textSize" value="xlarge"> Extra large</label>
+          <div class="segmented">
+            <label><input type="radio" name="textSize" value="normal"><span>Normal</span></label>
+            <label><input type="radio" name="textSize" value="large"><span>Large</span></label>
+            <label><input type="radio" name="textSize" value="xlarge"><span>Extra large</span></label>
           </div>
         </fieldset>
 
-        <fieldset>
+        <fieldset class="group">
           <legend>Display and sound</legend>
           <label class="choice"><input type="checkbox" name="contrast"> High contrast (light text on black)</label>
           <label class="choice"><input type="checkbox" name="dyslexia"> Dyslexia-friendly font and spacing</label>
           <label class="choice"><input type="checkbox" name="autoRead"> Start reading aloud when a document opens</label>
           <label class="choice"><input type="checkbox" name="caregiver"> I'm a caregiver helping someone else with their paperwork</label>
-          <div id="audio-settings">
+          <div id="audio-settings" class="group-extra">
             <label for="rate" class="field-label">Reading speed</label>
             <select id="rate" name="rate">
               <option value="0.7">Slow</option>

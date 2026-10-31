@@ -8,3 +8,4 @@ venv/
 tests/screenshot.png
 tests/blurry.png
 tests/*.pdf
+tests/shot_*.png
