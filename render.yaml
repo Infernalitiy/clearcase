@@ -1,0 +1,18 @@
+# One-click deploy on Render: https://render.com/deploy?repo=https://github.com/Infernalitiy/clearcase
+services:
+  - type: web
+    name: clearcase
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python backend/app.py
+    healthCheckPath: /api/config
+    envVars:
+      - key: HOST
+        value: 0.0.0.0
+      - key: PYTHON_VERSION
+        value: 3.12.10
+      - key: AWS_BEARER_TOKEN_BEDROCK   # optional: uploads and questions (samples work without it)
+        sync: false
+      - key: ELEVENLABS_API_KEY         # optional: natural voices
+        sync: false

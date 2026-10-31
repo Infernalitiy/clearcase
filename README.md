@@ -77,6 +77,8 @@ The app uses Claude via the Amazon Bedrock Converse API in `us-east-1`. Without 
 
 **Optional natural voices (ElevenLabs):** add `ELEVENLABS_API_KEY` to `.env` (and optionally `ELEVENLABS_VOICE_FEMALE` / `ELEVENLABS_VOICE_MALE` voice IDs) and restart. A *Female* / *Male* voice choice then appears in settings. Free ElevenLabs accounts can't use Voice Library voices through the API, so if a chosen voice is refused, ClearCase uses ElevenLabs' default voices Matilda and Brian instead. The key stays on the server. Only the sentence being read is sent to ElevenLabs, one sentence at a time, and nothing is stored. If ElevenLabs fails or isn't set up, ClearCase reads with the device's own voice as a backup.
 
+**Hosting:** this repo includes `render.yaml`, so it can be deployed for free on Render with one click: https://render.com/deploy?repo=https://github.com/Infernalitiy/clearcase . Add your keys as environment variables there, never in the code. Each visitor gets a simple hourly limit so a public site can't drain the API keys.
+
 Optional: `PORT=5050 python backend/app.py` to use another port, `python backend/test_bedrock.py` to check your Bedrock access.
 
 ## How it works
@@ -126,7 +128,7 @@ python tests/ui_smoke.py http://localhost:5000 --ai   # plus real upload and que
 - English only.
 - The dyslexia font uses OpenDyslexic if it's installed on your device, and falls back to a rounded font with wider spacing otherwise.
 - PDFs: only the first 3 pages are read.
-- This is a hackathon prototype on Flask's development server, with no authentication or rate limiting. Don't deploy it publicly as-is.
+- This is a hackathon prototype on Flask's development server, with no authentication and only a simple per-visitor rate limit.
 
 ## Next steps
 

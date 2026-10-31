@@ -10,6 +10,7 @@ import json
 import logging
 import os
 import re
+import time
 import urllib.error
 import urllib.request
 
@@ -87,6 +88,23 @@ def unexpected(e):
     # Log the error type only, never request contents.
     log.error("Unexpected error: %s", type(e).__name__)
     return jsonify({"error": "Something went wrong on our side. Please try again.", "code": "server_error"}), 500
+
+
+# ---------- Simple per-visitor limits (protects the API keys on a public site) ----------
+
+LIMITS = {"analyze": (20, 3600), "ask": (150, 3600), "tts": (800, 3600)}  # requests per hour
+_hits = {}
+
+
+def rate_limit(kind):
+    ip = request.headers.get("X-Forwarded-For", "").split(",")[0].strip() or request.remote_addr or "?"
+    count, window = LIMITS[kind]
+    now = time.time()
+    recent = [t for t in _hits.get((kind, ip), []) if now - t < window]
+    if len(recent) >= count:
+        raise ApiError("You've reached the limit for now. Please try again in a little while.", 429, "rate_limited")
+    recent.append(now)
+    _hits[(kind, ip)] = recent
 
 
 # ---------- Model helpers ----------
@@ -275,6 +293,7 @@ def analyze_image_bytes(raw):
 
 @app.post("/api/analyze")
 def analyze():
+    rate_limit("analyze")
     f = request.files.get("file")
     if not f or not f.filename:
         raise ApiError("Please choose a photo or PDF of your document first.", 400, "no_file")
@@ -344,6 +363,7 @@ def doc_text(document):
 
 @app.post("/api/ask")
 def ask():
+    rate_limit("ask")
     body = request.get_json(silent=True)
     if not isinstance(body, dict):
         raise ApiError("Send JSON with question and document.", 400, "bad_request")
@@ -423,6 +443,7 @@ def tts():
     key = eleven_key()
     if not key:
         raise ApiError("The natural voice isn't set up on this server.", 503, "no_tts")
+    rate_limit("tts")
     body = request.get_json(silent=True) or {}
     text = str(body.get("text") or "").strip()
     slot = body.get("voice") if body.get("voice") in ELEVEN_SLOTS else "female"
